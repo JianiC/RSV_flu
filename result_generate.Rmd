@@ -1,0 +1,103 @@
+---
+title: "TX_RSV_flu"
+author: "Jiani Chen"
+date: "5/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr) # needs to be run every time you start R and want to use %>%
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(lubridate)
+library(stats4)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+## read date data to generate curve
+flu <- read.csv("test_dataset/FluView_StackedColumnChart_Data_TX_date.csv")
+RSV <- read.csv("RSV_14_19_raw.csv") 
+ 
+flu<-flu %>% select(`TOTAL.A`,Date2) 
+RSV$RSV_positive_count <- as.integer(RSV$RSV_positive_count)  
+
+data<-merge(flu,RSV, by.x='Date2',by.y='date')
+data$Date2<-as.Date(data$Date2)
+data$Date2<-decimal_date(data$Date2)
+df<-melt(data,id="Date2")
+
+p<-ggplot(df, aes(x = Date2, y = value,group=variable,color=variable)) +
+  geom_line() +
+  geom_point()+
+  ylab("Total positive antigen test")
+p
+```
+```{r}
+colnames(data)<-c("date" ,"total_a","total_b") ## total_a for IAV, total_b for RSV
+TX_data_6s<-data %>%
+  bind_rows(data.frame(date = 2014.5,
+                       flu = NA, rsv = NA)) %>%
+  mutate(time = date - 2012) %>%
+  select(time,total_a,total_b)
+  
+TX_data_6s[order(TX_data_6s$time),] -> TX_data_6s
+write.csv(TX_data_6s,"test_TX_data_15_19.csv",row.names = FALSE)
+```
+
+## peak for 2015 looks wired? Try to only include 2017-2020?
+```{r}
+TX_data_4s<-data %>%
+  filter(data > 2016.5)%>%
+  bind_rows(data.frame(date = 2016.5,
+                       flu = NA, rsv = NA)) %>%
+  mutate(time = date - 2014) %>%
+  select(time,total_a,total_b)
+
+TX_data_4s[order(TX_data_4s$time),] -> TX_data_4s
+TX_data_4s
+write.csv(TX_data_4s,"test_TX_data_17_20.csv",row.names = FALSE)
+```
+
+
+```{r}
+# estimate data 
+# first round of GA - type vanilla - 500 run, maxit 10000
+# initialized at the MLE of the neutral model
+# first round of GA - type vanilla - 500 run, maxit 10000 
+
+calculate_aic<-function(loglik,npar){
+  aic=-2*(loglik)+2*npar
+  return(aic)
+}
+
+```
+
+## summary result with TX_6s
+```{r}
+## fix phi
+load("cluster_result/fixphi/result_fix_w.Rdata")
+
+as_tibble(t(c(result_fix_phi$GAobj@solution[,3:12], 
+              result_fix_phi$GAobj@solution[,1:2]))) %>% 
+  mutate(logLik = result_fix_phi$GAobj@fitnessValue, 
+         AIC = calculate_aic(logLik, npar = 12)) -> TX_6s_fixphi
+TX_6s_fixphi
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
