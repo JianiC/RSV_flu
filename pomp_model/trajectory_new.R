@@ -1,15 +1,62 @@
-## create a pomp object for RSV and influenza co-circulation without cross protection
-library(dplyr)
-library(pomp)
-library(GA)
-library(tictoc)
-library(tidyr)
-library(foreach)
-library(doParallel)
-############################################################################
-## use A to stand for IAV,
-## use B to stand for RSV
+## from pomp esitmated parameters to simulate trajectory
 
+## with new model
+
+# function to simulate trajectories
+
+give_fit_trajectories <- function(counter = 3, model_params = simulate_from) {
+  
+  Model <- model_params[counter, "Model"]
+  
+  model_params[counter,] -> param_vector 
+  
+  # browser()
+  
+  
+  rp_vals <- c(R0_A=param_vector$R0_A, gamma_A=365./9, w_A=1/1,
+               R0_B=param_vector$R0_B, gamma_B=365./2.5, w_B=1/1,
+               amplitude_A = param_vector$amplitude_A,
+               amplitude_B = param_vector$amplitude_B,
+               tpeak_A = param_vector$tpeak_A,
+               tpeak_B = param_vector$tpeak_B,
+               phi_A=param_vector$phi_A, phi_B=param_vector$phi_B,
+               chi_BA=param_vector$chi_BA, chi_AB=param_vector$chi_AB,
+               lamda_BA=param_vector$lamda_BA, lamda_AB=param_vector$lamda_AB,
+               
+               eta_A=365., eta_B=365.,
+               rho_A=param_vector$rho_A, rho_B=param_vector$rho_B,
+               sigmaSE=0.0000, psi=0.00000, 
+               pop=2.9e7)
+  
+  ic_vals <- SIRS2_independent_endemic_equilibrium(rp_vals)
+  params_all <- c(rp_vals,ic_vals)
+  
+  # specify length of burn in for simulations (in years)
+  t_start <- -100 
+  
+  
+  TX_data_3s<-read.csv("test_TX_data_18_20.csv")                                    ## data to build pomp model
+  # Create pomp model
+  TX_data_3s %>%  ## specify data 
+    make_pomp_model(time_start_sim=t_start) %>% 
+    trajectory(params = params_all, format = "d", method = "ode45") %>% 
+    slice(2:n()) %>% 
+    select(time, K_A, K_B) %>%
+    mutate(scases_A = param_vector$rho_A*K_A, 
+           scases_B = param_vector$rho_B*K_B) %>% 
+    select(time, scases_A, scases_B) %>% 
+    mutate(time = time + 2015) %>% 
+    gather(key = "type", value = "cases", -time) %>% 
+    mutate(cases_lb = qpois(0.025, cases), 
+           cases_ub = qpois(0.975, cases), 
+           Model = Model$Model) -> traj_data
+  
+  return(traj_data)
+  
+}
+
+
+## pomp model that is need to simulate trajectory
 rproc_euler_multinomial <- Csnippet("
   
   double betaA, betaB, foiA, foiB, seas_A, seas_B, N; 
@@ -186,6 +233,7 @@ rinit_ee <- Csnippet("
 
 ")
 
+
 det_skel <- Csnippet("
 
   double betaA, betaB, foiA, foiB, seas_A, seas_B, N; //dw foiB
@@ -331,7 +379,7 @@ make_pomp_model <- function(df, time_start_sim, dt=1) {
     times = "time",
     t0 = time_start_sim,
     obsnames = c("total_a","total_b"),
-    rprocess = process_model,
+    #rprocess = process_model,
     skeleton = vectorfield(det_skel),
     dmeasure = dmeas,
     rmeasure = rmeas, 
@@ -345,120 +393,6 @@ make_pomp_model <- function(df, time_start_sim, dt=1) {
   
   return(po)
 }
-
-set.seed(594709947L)
-
-stopifnot(packageVersion("pomp")>="2.0.9.1")
-# specify the kind of seed for parallelizingwhen using mclapply 
-RNGkind("L'Ecuyer-CMRG")
-
-
-t_start <- -100 
-TX_data_4s<-read.csv("test_TX_data_17_20.csv")
-
-TX_data_4s %>% 
-  make_pomp_model(time_start_sim=t_start) -> pomp_sirs_TX
-
-##############################################################################################################
-################################ loglikelihood function ##############################################
-##############################################################################################################
-
-
-of_4s <- function(par, pomp_object = pomp_sirs_TX, est, params_all_int = params_all, 
-                  give_conditional_log_lik = FALSE, target_data = inc_data, 
-                  fail_value = -1e9) {
-  
-  # replace values for the parameters of interest
-  if(class(par) %in% c("numeric")) {
-    params_all_int[est] <- par[est]
-  } else{
-    params_all_int[est] <- unlist(par[,est])  
-  }
-  # browser()
-  # use globally defined pomp object and replace param vector
-  pomp_object %>% 
-    pomp(params  = params_all_int) %>% 
-    # generate trajectories using the replaced parameters
-    trajectory(include.data = FALSE, format = "d", method = "ode45") %>%
-    # scale the "true incidence" by the reporting probabilities situated in params_all_int
-    mutate(K_A = ifelse(time < 2.75, NA, K_A), 
-           total_a = params_all_int["rho_A"]*K_A,
-           K_B = ifelse(time < 2.75, NA, K_B), 
-           total_b = params_all_int["rho_B"]*K_B) %>% 
-    # select relevant state veariables: type specific new scaled cases of flu
-    select(time, total_a, total_b) %>% 
-    # store this in a long-format tibble 
-    gather(key = type, value = st_cases, -time) %>% 
-    # join this with the target data: to calculate poisson log-likelihood
-    right_join(target_data, by = c("time", "type")) %>% 
-    # calculate poisson log-density: P(data_t|model_t)
-    mutate(poisson_log_density = dpois(x = obs_cases, lambda = st_cases, log = TRUE)) -> log_density_data 
-  
-  # This feature is for potential post-hoc analysis: if conditional log-liklihoods are called for
-  if(give_conditional_log_lik == TRUE) {
-    
-    log_density_data %>% 
-      # NA's are given a conditional log-density of 0
-      replace_na(list(poisson_log_density = 0)) %>% 
-      # Following two steps are used to generate type-specific conditional log-liklihood
-      group_by(type) %>% 
-      mutate(conditional_loglikelihood = cumsum(poisson_log_density)) -> result
-    
-  } else {
-    
-    log_density_data %>% 
-      # calculate the poisson log-likelihood : FOR THE OPTIMIZER
-      select(poisson_log_density) %>% 
-      summarise_all(sum, na.rm = TRUE) %>% 
-      mutate(poisson_log_density = ifelse(is.finite(poisson_log_density) == TRUE & 
-                                            poisson_log_density < 0, poisson_log_density, 
-                                          fail_value)) %>% 
-      unlist() -> result
-  }
-  
-  print(result)
-  print(par)
-  # browser()
-  return(result)  
-  
-}
-
-
-# This function is defined to provide pomp-GA integration
-of_ga_4s <- function(x, est = est_these) {
-  
-  x<- unname(unlist(x))
-  
-  of_4s(par = c(R0_B = x[1], R0_A = x[2], 
-                amplitude_A = x[3], amplitude_B = x[4], 
-                tpeak_A = x[5], tpeak_B = x[6],  
-                rho_A = x[7], rho_B = x[8], 
-                chi_AB = x[9], chi_BA = x[10],
-                lamda_AB =x[11],lamda_BA=x[12],
-                phi_A=x[13],phi_B=x[14]), est = est)
-}
-
-#######################################################
-print("start to set parameter to guess best value")
-
-## set parameters and vairalbes
-
-# Define the date in a long format : To be used in the objective function
-TX_data_4s %>%
-  gather(key = type, value = obs_cases, -time) -> inc_data
-
-# set a default vector of parameters: requirement of the objective function ::: Can this be improved(?)
-# NOTE: Keep the defaults to be at R0s of 1 and neutral model 
-# NOTE: phi value shave been fixed to 365/30 for defaults, mostly for convenience
-rp_vals <- c(R0_A = 1, gamma_A=365./2.5, w_A=1./1.,
-             R0_B = 1, gamma_B=365./9, w_B=1./1.,
-             phi_A=365/30., phi_B=365/30.,
-             chi_BA=0, chi_AB=0, eta_A=365., eta_B=365.,
-             lamda_AB=0,lamda_BA=0,
-             rho_A=0, rho_B=0, 
-             sigmaSE=0.0000, 
-             amplitude_A=0, tpeak_A=0, amplitude_B=0, tpeak_B=0,
-             pop=2.9e7)
 
 SIRS2_independent_endemic_equilibrium <- function(params){
   S_A <- 1/params[["R0_A"]]
@@ -492,67 +426,59 @@ SIRS2_independent_endemic_equilibrium <- function(params){
            RA_RB_0 = ee_A[["R_0"]]*ee_B[["R_0"]]))
 }
 
-ic_vals <- SIRS2_independent_endemic_equilibrium(rp_vals)
-params_all <- c(rp_vals,ic_vals)
 
-# setting the duration of crossprotection to zero, implies phi ~ Inf 
-# This is set to have an infinitesimal duration of crossprotection
-#neutral_params_all <- params_all
+## git the data
+load("cluster_result/3s_null_v2/result_null_3s.Rdata")
+as_tibble(t(c(result_null_3s$GAobj@solution[,3:8], 
+              result_null_3s$GAobj@solution[,1:2]))) %>%
+  mutate(logLik = result_neutral$GAobj@fitnessValue,
+         AIC = calculate_aic(logLik, npar = 8 )) -> TX_3s_null
 
-# parameters of interest
-est_these <- c("R0_B", "R0_A", "amplitude_A", "amplitude_B", "tpeak_A", "tpeak_B", 
-               "rho_A", "rho_B", "chi_AB", "chi_BA","lamda_AB","lamda_BA","phi_A","phi_B")
+TX_3s_null
 
-# create a sampled design of initial guesses: Sobol sampling
-pd <- sobolDesign(lower = c(R0_B = 0.5, R0_A = 0.5, amplitude_A = 1e-10, 
-                            amplitude_B = 1e-10, tpeak_A = 1/365.25, tpeak_B = 1/365.25,  
-                            rho_A = 1e-10, rho_B = 1e-10, chi_AB = 0, chi_BA = 0,lamda_AB=0,lamda_BA=0,phi_A = 1e-10,phi_B = 1e-10), 
-                  upper = c(R0_B = 25, R0_A = 25, amplitude_A = 1, amplitude_B = 1, 
-                            tpeak_A = 1, tpeak_B = 1, rho_A = 0.01, rho_B = 0.01, chi_AB = 1, chi_BA = 1, lamda_AB=1,lamda_BA=1,phi_A = 1e3, phi_B = 1e3), 
-                  nseq = 500)
-
-# combine the dataframe of initial guesses with the mle of the neutral model
-
-## load result_neutral
-#load("test_result_neutral.Rdata")
-#data.frame(result_neutral$GAobj@solution) %>%
-#  full_join(pd) %>% 
-#  replace_na(replace = list(chi_AB = 0, chi_BA = 0)) -> pd_with_fix_w_neutral_mle
+## summarise the estimated parameter to simulat from
+TX_3s_null %>% 
+  
+  mutate(phi_A = 0, phi_B =0,
+         lamda_AB =1, lamda_BA =1, 
+         chi_BA =1, chi_AB=1)%>%
+  mutate(Model =  "Nulll")%>%
+  # mutate(phi_A = ifelse(Model == "Null", 0, phi_A),
+  #         phi_B= ifelse(Model == "Null", 0, phi_B))
+  select(-c(logLik, AIC)) -> simulate_from
 
 
-# genetic algorithm set up to run in parallel
-tic()
-no_cores <- detectCores() - 1  
+## apply to the trajectory function
 
-registerDoParallel(cores=no_cores)  
+all_fit2 <- map_dfr(.x = 1:3, .f = give_fit_trajectories)
 
-cl <- makeCluster(no_cores, type="FORK")
+# combine the trajectories with data 
 
-GA_with_phi <- ga(type = "real-valued", 
-               fitness = of_ga_4s,
-               lower = c(R0_B = 0.5, R0_A = 0.5, amplitude_A = 1e-10, 
-                         amplitude_B = 1e-10, tpeak_A = 1/365.25, tpeak_B = 1/365.25,  
-                         rho_A = 1e-10, rho_B = 1e-10, chi_AB = 0, chi_BA = 0, lamda_AB=0,lamda_BA=0, phi_A = 1e-10,phi_B = 1e-10), 
-               upper = c(R0_B = 25, R0_A = 25, 
-                         amplitude_A = 1, amplitude_B = 1, 
-                         tpeak_A = 1, tpeak_B = 1, 
-                         rho_A = 0.01, rho_B = 0.01, chi_AB = 1, chi_BA = 1, lamda_AB=1,lamda_BA=1, phi_A = 1e3, phi_B = 1e3),
-               elitism = base::max(1, round(100*.1)), 
-               popSize = 500, maxiter = 10000, run = 500, 
-               suggestions = pd,
-               optim = TRUE,
-               optimArgs = list(poptim = 0.1, 
-                                control = list(maxit = 1000)),
-               seed = 12345, parallel = cl)
-
-stopCluster(cl)
-toc() -> ga_took
+TX_data_3s %>% 
+  slice(2:n()) %>% 
+  select(-time) %>% 
+  gather(key = "type", value = "obs_cases") %>% 
+  select(-type) %>% 
+  slice(rep(1:n(), times = 3)) %>% 
+  bind_cols(all_fit2) %>% 
+  select(2, 3, 1, 4:7) -> all_fit_with_data
 
 
-result_with_phi_4s <- list(it_took  = c(paste((ga_took$toc - ga_took$tic)/3600, "hrs"), 
-                                     paste((ga_took$toc - ga_took$tic)/60, "mins"), 
-                                     paste((ga_took$toc - ga_took$tic), "secs")), 
-                        GAobj = GA_with_phi)
+
+## plot
+library(ggplot2)
+
+all_fit_with_data %>% 
+  filter(Model == "Nulll") %>% 
+  filter(`type` == "scases_A") -> all_fit_with_data_subset1
 
 
-save(result_with_phi_4s , file = "result_with_phi_4s.Rdata")
+# make the plot_object 
+
+all_fit_with_data_subset1 %>% 
+  ggplot(aes(x=time,y=cases,color="red"))+
+  geom_line(size=0.8)+
+  geom_line(aes(y=obs_cases), size = 0.8,color="black")+
+  geom_ribbon(aes(ymin = cases_lb, ymax = cases_ub, 
+                  fill = type,color="red"), 
+              alpha = 0.2) 

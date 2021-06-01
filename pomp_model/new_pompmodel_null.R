@@ -355,9 +355,9 @@ RNGkind("L'Ecuyer-CMRG")
 
 t_start <- -100 
 
-TX_data_4s<-read.csv("test_TX_data_17_20.csv")
+TX_data_3s<-read.csv("test_12_13.csv")
 
-TX_data_4s %>% 
+TX_data_3s %>% 
   make_pomp_model(time_start_sim=t_start) -> pomp_sirs_TX
 
 ##############################################################################################################
@@ -365,7 +365,7 @@ TX_data_4s %>%
 ##############################################################################################################
 
 
-of_4s <- function(par, pomp_object = pomp_sirs_TX, est, params_all_int = params_all, 
+of_3s <- function(par, pomp_object = pomp_sirs_TX, est, params_all_int = params_all, 
                   give_conditional_log_lik = FALSE, target_data = inc_data, 
                   fail_value = -1e9) {
   
@@ -382,9 +382,9 @@ of_4s <- function(par, pomp_object = pomp_sirs_TX, est, params_all_int = params_
     # generate trajectories using the replaced parameters
     trajectory(include.data = FALSE, format = "d", method = "ode45") %>%
     # scale the "true incidence" by the reporting probabilities situated in params_all_int
-    mutate(K_A = ifelse(time < 2.75, NA, K_A), 
+    mutate(K_A = ifelse(time < 2.5, NA, K_A), 
            total_a = params_all_int["rho_A"]*K_A,
-           K_B = ifelse(time < 2.75, NA, K_B), 
+           K_B = ifelse(time < 2.5, NA, K_B), 
            total_b = params_all_int["rho_B"]*K_B) %>% 
     # select relevant state veariables: type specific new scaled cases of flu
     select(time, total_a, total_b) %>% 
@@ -426,16 +426,14 @@ of_4s <- function(par, pomp_object = pomp_sirs_TX, est, params_all_int = params_
 
 
 # This function is defined to provide pomp-GA integration
-of_ga_4s <- function(x, est = est_these) {
+of_ga_3s <- function(x, est = est_these) {
   
   x<- unname(unlist(x))
   
-  of_4s(par = c(R0_B = x[1], R0_A = x[2], 
+  of_3s(par = c(R0_B = x[1], R0_A = x[2], 
                 amplitude_A = x[3], amplitude_B = x[4], 
                 tpeak_A = x[5], tpeak_B = x[6],  
-                rho_A = x[7], rho_B = x[8], 
-                chi_AB = x[9], chi_BA = x[10],
-                lamda_AB =x[11],lamda_BA=x[12]), est = est)
+                rho_A = x[7], rho_B = x[8]), est = est)
 }
 
 #######################################################
@@ -444,21 +442,21 @@ print("start to set parameter to guess best value")
 ## set parameters and vairalbes
 
 # Define the date in a long format : To be used in the objective function
-TX_data_4s %>%
+TX_data_3s %>%
   gather(key = type, value = obs_cases, -time) -> inc_data
 
 # set a default vector of parameters: requirement of the objective function ::: Can this be improved(?)
 # NOTE: Keep the defaults to be at R0s of 1 and neutral model 
 # NOTE: phi value shave been fixed to 365/30 for defaults, mostly for convenience
-rp_vals <- c(R0_A = 1, gamma_A=365./2.5, w_A=1./1.,
-             R0_B = 1, gamma_B=365./9, w_B=1./1.,
-             phi_A=365/30., phi_B=365/30.,
-             chi_BA=0, chi_AB=0, eta_A=365., eta_B=365.,
-             lamda_AB=0,lamda_BA=0,
+rp_vals <- c(R0_A = 1, gamma_A=365./9, w_A=1./1.,
+             R0_B = 1, gamma_B=365./2.5, w_B=1./1.,
+             phi_A=0, phi_B=0,
+             chi_BA=1, chi_AB=1, eta_A=365., eta_B=365.,
+             lamda_AB=1,lamda_BA=1,
              rho_A=0, rho_B=0, 
              sigmaSE=0.0000, 
              amplitude_A=0, tpeak_A=0, amplitude_B=0, tpeak_B=0,
-             pop=2.9e7)
+             pop=2.6e7)
 
 SIRS2_independent_endemic_equilibrium <- function(params){
   S_A <- 1/params[["R0_A"]]
@@ -501,14 +499,14 @@ params_all <- c(rp_vals,ic_vals)
 
 # parameters of interest
 est_these <- c("R0_B", "R0_A", "amplitude_A", "amplitude_B", "tpeak_A", "tpeak_B", 
-               "rho_A", "rho_B", "chi_AB", "chi_BA","lamda_AB","lamda_BA")
+               "rho_A", "rho_B")
 
 # create a sampled design of initial guesses: Sobol sampling
 pd <- sobolDesign(lower = c(R0_B = 0.5, R0_A = 0.5, amplitude_A = 1e-10, 
                             amplitude_B = 1e-10, tpeak_A = 1/365.25, tpeak_B = 1/365.25,  
-                            rho_A = 1e-10, rho_B = 1e-10, chi_AB = 0, chi_BA = 0,lamda_AB=0,lamda_BA=0), 
-                  upper = c(R0_B = 25, R0_A = 25, amplitude_A = 1, amplitude_B = 1, 
-                            tpeak_A = 1, tpeak_B = 1, rho_A = 0.01, rho_B = 0.01, chi_AB = 1, chi_BA = 1, lamda_AB=1,lamda_BA=1), 
+                            rho_A = 1e-10, rho_B = 1e-10), 
+                  upper = c(R0_B = 10, R0_A = 10, amplitude_A = 1, amplitude_B = 1, 
+                            tpeak_A = 1, tpeak_B = 1, rho_A = 0.01, rho_B = 0.01), 
                   nseq = 500)
 
 # combine the dataframe of initial guesses with the mle of the neutral model
@@ -529,14 +527,14 @@ registerDoParallel(cores=no_cores)
 cl <- makeCluster(no_cores, type="FORK")
 
 GA_fix_w <- ga(type = "real-valued", 
-               fitness = of_ga_4s,
+               fitness = of_ga_3s,
                lower = c(R0_B = 0.5, R0_A = 0.5, amplitude_A = 1e-10, 
                          amplitude_B = 1e-10, tpeak_A = 1/365.25, tpeak_B = 1/365.25,  
-                         rho_A = 1e-10, rho_B = 1e-10, chi_AB = 0, chi_BA = 0, lamda_AB=0,lamda_BA=0), 
-               upper = c(R0_B = 25, R0_A = 25, 
+                         rho_A = 1e-10, rho_B = 1e-10), 
+               upper = c(R0_B = 10, R0_A = 10, 
                          amplitude_A = 1, amplitude_B = 1, 
                          tpeak_A = 1, tpeak_B = 1, 
-                         rho_A = 0.01, rho_B = 0.01, chi_AB = 1, chi_BA = 1, lamda_AB=1,lamda_BA=1),
+                         rho_A = 0.01, rho_B = 0.01),
                elitism = base::max(1, round(100*.1)), 
                popSize = 500, maxiter = 10000, run = 500, 
                suggestions = pd,
@@ -549,10 +547,10 @@ stopCluster(cl)
 toc() -> ga_took
 
 
-result_fix_phi_4s <- list(it_took  = c(paste((ga_took$toc - ga_took$tic)/3600, "hrs"), 
+test_newresult_null <- list(it_took  = c(paste((ga_took$toc - ga_took$tic)/3600, "hrs"), 
                                      paste((ga_took$toc - ga_took$tic)/60, "mins"), 
                                      paste((ga_took$toc - ga_took$tic), "secs")), 
                         GAobj = GA_fix_w)
 
 
-save(result_fix_phi_4s, file = "result_fix_phi_4s.Rdata")
+save(test_newresult_null, file = "test_newresult_null.Rdata")
