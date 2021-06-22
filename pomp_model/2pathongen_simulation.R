@@ -1,61 +1,5 @@
-## from pomp esitmated parameters to simulate trajectory
-library(purrr)
-## with new model
-
-# function to simulate trajectories
-
-give_fit_trajectories <- function(counter = 3, model_params = simulate_from_new) {
-  
-  Model <- model_params[counter, "Model"]
-  
-  model_params[counter,] -> param_vector 
-  
-  # browser()
-  
-  
-  rp_vals <- c(R0_A=param_vector$R0_A, gamma_A=365./9, w_A=1/1,
-               R0_B=param_vector$R0_B, gamma_B=365./2.5, w_B=1/1,
-               amplitude_A = param_vector$amplitude_A,
-               amplitude_B = param_vector$amplitude_B,
-               tpeak_A = param_vector$tpeak_A,
-               tpeak_B = param_vector$tpeak_B,
-               phi_A=param_vector$phi_A, phi_B=param_vector$phi_B,
-               chi_BA=param_vector$chi_BA, chi_AB=param_vector$chi_AB,
-               lamda_BA=param_vector$lamda_BA, lamda_AB=param_vector$lamda_AB,
-               
-               eta_A=365., eta_B=365.,
-               rho_A=param_vector$rho_A, rho_B=param_vector$rho_B,
-               sigmaSE=0.0000, psi=0.00000, 
-               pop=2.6e7)
-  
-  ic_vals <- SIRS2_independent_endemic_equilibrium(rp_vals)
-  params_all <- c(rp_vals,ic_vals)
-  
-  # specify length of burn in for simulations (in years)
-  t_start <- -100 
-  
-  
-  #TX_data_3s<-read.csv("test_TX_data_18_20.csv")                                    ## data to build pomp model
-  # Create pomp model
-  data %>%  ## specify data 
-    make_pomp_model(time_start_sim=t_start) %>% 
-    trajectory(params = params_all, format = "d", method = "ode45") %>% 
-    slice(2:n()) %>% 
-    select(time, K_A, K_B) %>%
-    mutate(scases_A = param_vector$rho_A*K_A, 
-           scases_B = param_vector$rho_B*K_B) %>% 
-    select(time, scases_A, scases_B) %>% 
-    mutate(time = time + 2015) %>% 
-    gather(key = "type", value = "cases", -time) %>% 
-    mutate(cases_lb = qpois(0.025, cases), 
-           cases_ub = qpois(0.975, cases), 
-           Model = Model$Model) -> traj_data
-  
-  return(traj_data)
-  
-}
-
-
+## dynamic simulation
+## code to creat pomp model
 
 rproc_euler_multinomial <- Csnippet("
   
@@ -406,169 +350,194 @@ SIRS2_independent_endemic_equilibrium <- function(params){
            RA_RB_0 = ee_A[["R_0"]]*ee_B[["R_0"]]))
 }
 
-calculate_aic<-function(loglik,npar){
-  aic=-2*(loglik)+2*npar
-  return(aic)
-}
 
 
 
-library("ggpubr")
+# specify length of burn in for simulations (in years)
+t_start <- 0 
+# produce the simulation of compartment for three seasons
 
-
-
-load("cluster_result/13_2pathongen_null/13_2scirs_null.Rdata")
-load("cluster_result/13_2pathongen_null/13_2scirs_lamda.Rdata")
-load("cluster_result/13_2pathongen_null/13_2scirs_fixphi.Rdata")
-
-as_tibble(result_fixphi$GAobj@solution)%>%
-  #filter(row_number()==1)%>%
-  mutate(logLik = result_fixphi$GAobj@fitnessValue,
-         AIC = calculate_aic(logLik, npar = 12 )) -> pomp_sirs2_13
-
-as_tibble(result_lamda$GAobj@solution)%>%
-  #filter(row_number()==1)%>%
-  mutate(logLik = result_lamda$GAobj@fitnessValue,
-         AIC = calculate_aic(logLik, npar = 10 )) -> pomp_sirs2_13_lamda
-
-as_tibble(result_null$GAobj@solution)%>%
-  #filter(row_number()==1)%>%
-  mutate(logLik = result_null$GAobj@fitnessValue,
-         AIC = calculate_aic(logLik, npar = 8 )) -> pomp_sirs2_13
-
-pomp_sirs2_13%>% 
-  mutate(phi_A = 0, phi_B =0,
-         chi_BA =1, chi_AB=1)%>%
-  mutate(Model =  "Nulll")%>%
-  select(-c(logLik, AIC)) -> simulate_from_new
-
-
-
-pomp_sirs2_13%>% 
-  mutate(phi_A = 365/30, phi_B =365/30)%>%
-  mutate(Model =  "Nulll")%>%
-  select(-c(logLik, AIC)) -> simulate_from_new
-
-load("cluster_result/13_2pathongen_null/18_2scirs_null_3s.Rdata")
-
-load("cluster_result/13_2pathongen_null/18_2scirs_lamda_3s.Rdata")
-
-load("cluster_result/13_2pathongen_null/18_2scirs_fixphi_3s.Rdata")
-
-as_tibble(result_fixphi_3s$GAobj@solution)%>%
-  filter(row_number()==1)%>%
-  mutate(logLik = result_lamda_3s$GAobj@fitnessValue,
-         AIC = calculate_aic(logLik, npar = 12 )) -> pomp_sirs2_13
-
-
-
-as_tibble(result_lamda_3s$GAobj@solution)%>%
-  filter(row_number()==1)%>%
-  mutate(logLik = result_lamda_3s$GAobj@fitnessValue,
-         AIC = calculate_aic(logLik, npar = 10 )) -> pomp_sirs2_13
-output_sicrs2$GAobj$optim
-
-
-as_tibble(result_null_3s$GAobj@solution)%>%
-  #filter(row_number()==1)%>%
-  mutate(logLik = result_null_3s$GAobj@fitnessValue,
-         AIC = calculate_aic(logLik, npar = 8 )) -> pomp_sirs2_13
-
-
-# Create pomp model
-#data <-read.csv("cluster_result/new_model/3s_null/test_TX_data_18_20.csv")
-data<-read.csv("test_12_13.csv")
-data <-read.csv("rsv_flu_2018.csv")
-data <-read.csv("test_TX_data_18_20.csv")
-pomp_sirs2_13%>% 
-  mutate(phi_A = 0, phi_B =0,
-         chi_BA =1, chi_AB=1,
-         lamda_AB=1, lamda_BA=1)%>%
-  mutate(Model =  "Nulll")%>%
-  select(-c(logLik, AIC)) -> simulate_from
+# add fake data to simulate three seasons 
+data.frame(time = seq(0, 2.75, by = 1/52), 
+           total_a = NA, 
+           total_b = NA) %>% 
+  make_pomp_model(time_start_sim=t_start) -> pomp_sirs
 
 
 
 
 
-
-simulate_from -> simulate_from_new
-simulate_from %>%
-  mutate(lamda_BA = 0.1)-> simulate_from_new
-
-write.csv(simulate_from_new,"cluster_result/13_2pathongen_null/18_adjust_prior_3s.csv")
-
-
-
-all_fit <- map_dfr(.x = 1:3, .f = give_fit_trajectories)
-
-## from all fit to plot trajectory
-
-plot_traj<-function(data = data, all_fit = all_fit){
-  data %>% 
+simulate_tss <- function(params, give_everything = FALSE, show_progress = TRUE,...) {
+  # browser()
+  if(show_progress == TRUE) {
+    pb$tick()$print()  
+  } else {
+    print("Progress of the job will not be displayed!")
+  }
+  
+  guess1_params <- c(R0_A=unname(params[,"R0"]), gamma_A=365./9, w_A=1./1.,
+                     R0_B=unname(params[,"rel"])*unname(params[,"R0"]), gamma_B=365./2.5, w_B=1./1.,
+                     phi_A=unname(params[,"phi"]), phi_B=unname(params[,"phi"]),
+                     chi_BA=unname(params[,"chi"]), chi_AB=unname(params[,"chi"]), 
+                     lamda_BA=unname(params[,"lamdaBA"]), lamda_AB=unname(params[,"lamdaAB"]), 
+                     eta_A=365., eta_B=365., rho_A =0.0014, rho_B =  0.0004, 
+                     sigmaSE=0.0001, psi=0.00001, 
+                     amplitude_A=0.2238291, amplitude_B=0.183653, 
+                     tpeak_A=0.8571905, tpeak_B = 0.1401407,
+                     pop=2.6e7)
+  
+  guess1_params <- unlist(guess1_params) 
+  
+  guess1_ic <- SIRS2_independent_endemic_equilibrium(guess1_params)
+  guess1_all <- c(guess1_params,guess1_ic)
+  
+  # browser()
+  
+  pomp_sirs %>%
+    trajectory(params=guess1_all, t0=-100, format="d", method = "ode45") %>% 
     slice(2:n()) %>% 
-    select(-time) %>% 
-    gather(key = "type", value = "obs_cases") %>% 
-    select(-type) %>% 
-    slice(rep(1:n(), times = 3)) %>% 
-    bind_cols(all_fit) %>% 
-    select(2, 3, 1, 4:7) -> all_fit_with_data
+    mutate(mp_A = max(K_A), 
+           mp_B = max(K_B), 
+           mp_AB_ratio = mp_A/mp_B, 
+           pw_A = time[which(K_A == max(K_A))], 
+           pw_B = time[which(K_B == max(K_B))], 
+           p_AB_diff = (pw_A - pw_B)*52, 
+           pop = guess1_all["pop"],
+           S_A_tot = SA_SB + SA_IB + SA_CB + SA_RB,
+           S_B_tot = SA_SB + IA_SB + CA_SB + RA_SB,
+           I = IA_SB + SA_IB + IA_IB + IA_RB + RA_IB, 
+           I_A_tot = IA_SB + IA_IB + IA_RB, 
+           I_B_tot = SA_IB + IA_IB + RA_IB,   
+           C = CA_SB + SA_CB, 
+           R = SA_RB + RA_SB + RA_RB, 
+           I_A_prop = (IA_SB + IA_IB + IA_RB)/I, 
+           I_B_prop = (SA_IB + IA_IB + RA_IB)/I, 
+           C_A_prop = CA_SB/C, 
+           C_B_prop = SA_CB/C) -> everything 
+  
+  everything %>% 
+    slice(n()) %>% 
+    select(mp_AB_ratio, p_AB_diff) -> test_sim
+  
+  if(give_everything == TRUE) {
+    print("All the Compartments are produced")
+    return(everything)
+  } else {
+    return(test_sim)  
+  }
+  
+} 
+
+
+#function to loop over values 
+multi_simulate_tss <- function(counter, params_mat, ...) {
+  simulate_tss(params = params_mat[counter,], ...)
+}
+
+
+
+trajectory_plot<-function(data,test.labs){
+  data %>% 
+    mutate(
+      facet_label = rep(c("a", "b", "c"), each = length(seq(0, 2.75-1/52, by = 1/52))),
+      Inc_A_tot = K_A, 
+      Inc_B_tot = K_B
+    ) %>% 
+    select(Inc_A_tot, Inc_B_tot, time, facet_label) %>% 
+    gather(key = "Compartment", value = "Count", -c(time, facet_label)) %>% 
+    ggplot(aes(x = time+2017, y = Count, colour = Compartment, fill = Compartment)) +
+    geom_area(position = position_dodge(width = 0), alpha = 0.5) +
+    labs(x = "Time ", 
+         y = "Cases ") +
+    scale_colour_manual(name = "", 
+                        values = c("red", "blue")) +
+    facet_wrap(.~ facet_label, scales = "fixed", ncol = 1,labeller = labeller(facet_label=test.labs))+
+    theme_bw()+
+    #theme(legend.position="none")+
+    scale_fill_manual(name = "", 
+                      values = c("red", "blue"),
+                      labels=c("RSV","IAV"))-> c_grid_plot
+  
+  return(c_grid_plot)
+  
+  
+}
+
+
+## plot different compartment
+ 
+S_compart_plot<-function(data){
+  c_facet_data %>% 
+    mutate(
+      facet_label = rep(c("a", "b", "c"), each = length(seq(0, 2.75-1/52, by = 1/52))),
+      Inc_A_tot = K_A, 
+      Inc_B_tot = K_B
+    ) %>% 
+    select(S_A_tot, S_B_tot, time, facet_label) %>% 
+    gather(key = "Compartment", value = "Count", -c(time, facet_label)) %>% 
+    ggplot(aes(x = time+2017, y = Count, colour = Compartment, fill = Compartment)) +
+    geom_line()+
+    #geom_area(position = position_dodge(width = 0), alpha = 0.5) +
+    labs(x = "Time ", 
+         y = "Cases ") +
+    scale_colour_manual(name = "", 
+                        values = c("red", "blue")) +
+    facet_wrap(.~ facet_label, scales = "fixed", ncol = 1,labeller = labeller(facet_label=test.labs))+
+    theme_bw()+
+    #theme(legend.position="none")+
+    scale_fill_manual(name = "", 
+                      values = c("red", "blue"),
+                      labels=c("RSV","IAV"))-> c_grid_plot_S
+  
+  return(c_grid_plot_S)
+  
   
 }
 
 
 
-data %>% 
-  slice(2:n()) %>% 
-  select(-time) %>% 
-  gather(key = "type", value = "obs_cases") %>% 
-  select(-type) %>% 
-  slice(rep(1:n(), times = 3)) %>% 
-  bind_cols(all_fit) %>% 
-  select(2, 3, 1, 4:7) -> all_fit_with_data
-
-library(ggplot2)
-
-all_fit_with_data %>% 
-  filter(Model == "Nulll") %>% 
-  filter(`type` == "scases_A") -> all_fit_with_data_subset1
-
-
-
-# make the plot_object 
-
-all_fit_with_data_subset1 %>% 
-  ggplot(aes(x=time,y=cases,color="red"))+
-  geom_line(size=0.8)+
-  geom_line(aes(y=obs_cases), size = 0.8,color="black")+
-  geom_ribbon(aes(ymin = cases_lb, ymax = cases_ub, 
-                  fill = type,color="red"), 
-              alpha = 0.2)+
-  labs(title = "pomp model fitting for RSV using new code")
 
 
 
 
 
+## 1. impact of R0 of IAV
 
-type.labs <-c("scases_A"="RSV","scases_B"="IAV")
-  
-  
-all_fit_with_data %>%
-  drop_na(cases)%>%
-  ggplot(aes(x=time,y=cases,color=type, group=type))+
-  geom_line(size=0.8,alpha = 0.5)+
-  geom_ribbon(aes(ymin = cases_lb, ymax = cases_ub, 
-                  fill = type), alpha = 0.5)+
-  geom_line(data=all_fit_with_data,aes(y=obs_cases), size = 0.8,color="black")+
-  facet_wrap(.~type,ncol = 1,labeller = labeller(type=type.labs))+
-  theme_bw()+
-  theme(legend.position="none")+
-  scale_fill_manual(name = "", 
-                    values = c("red", "blue"))
+param_values <- data.frame(R0 = 2., chi =1, lamdaBA =1 , lamdaAB =1, phi = 0,  
+                           rel = c(0.8,1,1.1))
 
 
+c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values, 
+                       give_everything = TRUE, show_progress = FALSE)
+
+test.labs <-c("a"="R0 = 1.6","b"="R0 = 2","c"="R0 = 2.2")
+plot1<-trajectory_plot(c_facet_data,test.labs)
+plot1
 
 
+## 3. impact of lamda
+
+param_values <- data.frame(R0 = 2., chi =1, lamdaAB = c(1, 0.5, 0.2), lamdaBA= 1 ,phi = 0,  
+                           rel = 0.9)
+
+test.labs <-c("a"="lamda = 1","b"="lamda=0.5","c"="lamda = 0.2")
+
+c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values, 
+                       give_everything = TRUE, show_progress = FALSE)
 
 
+plot1<-trajectory_plot(c_facet_data,test.labs)
+plot1
+
+
+## 3. impact of chi
+
+param_values <- data.frame(R0 = 2., chi = c(1,0.9,0.8), lamdaAB = 1, lamdaBA= 1 ,phi = 0, rel = 0.9)
+
+
+c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values, 
+                       give_everything = TRUE, show_progress = FALSE)
+
+
+plot1<-trajectory_plot(c_facet_data)
+plot1
