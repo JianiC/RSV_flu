@@ -1,0 +1,326 @@
+---
+title: "RSV-FLU-Skyride-Restim"
+author: "Lambodhar Damodaran"
+date: "10/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(ggpubr)
+library(EpiEstim)
+library(lubridate)
+library(dplyr)
+library(plyr)
+library(tidyr)
+library(grid)
+library(gridExtra)
+library(cowplot)
+library(purrr)
+library(reshape2)
+```
+
+
+## Data
+
+The first line was removed from each of the log files for proper headers of data.
+Row with NaN values removed.
+Change 'Time' to 'dates'. Dates should be ordered in ascending date (oldest to newest).
+
+```{r}
+IAV_H1 <- read.csv("gisaid_IAV_H1_skyride.txt", sep ='\t', header = TRUE)
+IAV_H1$dates <- as.Date(paste(format(date_decimal(IAV_H1$dates),"%Y-%m-%d")))
+
+IAV_H3 <- read.csv("gisaid_IAV_H3_skyride.txt", sep ='\t', header = TRUE)
+IAV_H3$dates <- as.Date(paste(format(date_decimal(IAV_H3$dates),"%Y-%m-%d")))
+
+IBV_V <- read.csv("gisaid_IBV_V_skyride.txt", sep ='\t', header = TRUE)
+IBV_V$dates <- as.Date(paste(format(date_decimal(IBV_V$dates),"%Y-%m-%d")))
+
+IBV_Y <- read.csv("gisaid_IBV_Y_skyride.txt", sep ='\t', header = TRUE)
+IBV_Y$dates <- as.Date(paste(format(date_decimal(IBV_Y$dates),"%Y-%m-%d")))
+
+RSVA <- read.csv("rsva_12_19_season_skyride.txt", sep ='\t', header = TRUE)
+RSVA$dates <- as.Date(paste(format(date_decimal(RSVA$dates),"%Y-%m-%d")))
+
+RSVB <- read.csv("rsvb_12_19_season_skyride.txt", sep ='\t', header = TRUE)
+RSVB$dates <- as.Date(paste(format(date_decimal(RSVB$dates),"%Y-%m-%d")))
+
+```
+
+
+
+## H1 IAV Skyride Coalesecent R estim - 2011-2020
+
+```{r , echo=FALSE, fig.keep="last"}
+
+# Parametric Serial Interval
+incidih1 <-  IAV_H1[, c("dates", "Mean")]
+names(incidih1)[names(incidih1) == "Mean"] <- "I"
+
+res_parametric_si_h1 <- estimate_R(incidih1$I,
+                                method="parametric_si",
+                                config = make_config(list(
+                                  mean_si = 2.6,
+                                  std_si = 1.5))
+)
+
+res_parametric_si_h1$dates <- incidih1$dates
+plot <- plot(res_parametric_si_h1, legend = FALSE)
+annotate_figure(plot,top = text_grob(expression(paste("R" ["0"]," Estimation ","- Skyride - 2011 -2020 - H1 IAV" )) , size = 12))
+
+
+df_restim_IAVHI <- res_parametric_si_h1$R %>%
+  mutate(dates = map2(t_start, t_end, `:`)) %>%
+  select(-t_start, -t_end) %>%
+  unnest
+
+df_restim_IAVHI = df_restim_IAVHI[order(df_restim_IAVHI[,'dates'],-df_restim_IAVHI[,'Mean(R)']),]
+df_restim_IAVHI = df_restim_IAVHI[!duplicated(df_restim_IAVHI$dates),]
+IAV_H1$date_index <- seq.int(nrow(IAV_H1))
+df_restim_IAVHI <- merge(df_restim_IAVHI,IAV_H1, by.x = c("dates"), by.y = c("date_index"))
+df_restim_IAVHI <- as.data.frame(df_restim_IAVHI)
+```
+
+
+## H3 IAV Skyride Coalesecent R estim - 2011-2020
+
+```{r , echo=FALSE, fig.keep="last"}
+
+# Parametric Serial Interval
+incidih3 <-  IAV_H3[, c("dates", "Mean")]
+names(incidih3)[names(incidih3) == "Mean"] <- "I"
+
+res_parametric_si_h3 <- estimate_R(incidih3$I,
+                                method="parametric_si",
+                                config = make_config(list(
+                                  mean_si = 2.6,
+                                  std_si = 1.5))
+)
+
+res_parametric_si_h3$dates <- incidih3$dates
+plot <- plot(res_parametric_si_h3, legend = FALSE)
+annotate_figure(plot,top = text_grob(expression(paste("R" ["0"]," Estimation ","- Skyride - 2011 -2020 - H3 IAV" )) , size = 12))
+
+
+df_restim_IAVH3 <- res_parametric_si_h3$R %>%
+  mutate(dates = map2(t_start, t_end, `:`)) %>%
+  select(-t_start, -t_end) %>%
+  unnest
+
+df_restim_IAVH3 = df_restim_IAVH3[order(df_restim_IAVH3[,'dates'],-df_restim_IAVH3[,'Mean(R)']),]
+df_restim_IAVH3 = df_restim_IAVH3[!duplicated(df_restim_IAVH3$dates),]
+IAV_H3$date_index <- seq.int(nrow(IAV_H3))
+df_restim_IAVH3 <- merge(df_restim_IAVH3,IAV_H3, by.x = c("dates"), by.y = c("date_index"))
+df_restim_IAVH3 <- as.data.frame(df_restim_IAVH3)
+
+```
+
+
+
+## B-Victoria - Skyride Coalesecent R estim - 2011-2020
+
+```{r , echo=FALSE, fig.keep="last"}
+
+# Parametric Serial Interval
+incidiB_vic <-  IBV_V[, c("dates", "Mean")]
+names(incidiB_vic)[names(incidiB_vic) == "Mean"] <- "I"
+
+res_parametric_si_B_vic <- estimate_R(incidiB_vic$I,
+                                method="parametric_si",
+                                config = make_config(list(
+                                  mean_si = 2.6,
+                                  std_si = 1.5))
+)
+
+res_parametric_si_B_vic$dates <- incidiB_vic$dates
+plot <- plot(res_parametric_si_B_vic, legend = FALSE)
+annotate_figure(plot,top = text_grob(expression(paste("R" ["0"]," Estimation ","- Skyride - 2011 -2020 - B_victoria " )) , size = 12))
+
+
+df_restim_B_vic <- res_parametric_si_B_vic$R %>%
+  mutate(dates = map2(t_start, t_end, `:`)) %>%
+  select(-t_start, -t_end) %>%
+  unnest
+
+df_restim_B_vic = df_restim_B_vic[order(df_restim_B_vic[,'dates'],-df_restim_B_vic[,'Mean(R)']),]
+df_restim_B_vic = df_restim_B_vic[!duplicated(df_restim_B_vic$dates),]
+IBV_V$date_index <- seq.int(nrow(IBV_V))
+df_restim_B_vic <- merge(df_restim_B_vic,IBV_V, by.x = c("dates"), by.y = c("date_index"))
+df_restim_B_vic <- as.data.frame(df_restim_B_vic)
+  
+```
+
+
+
+## B-Yamagata - Skyride Coalesecent R estim - 2011-2020
+
+```{r , echo=FALSE, fig.keep="last"}
+
+# Parametric Serial Interval
+incidiB_yam <-  IBV_Y[, c("dates", "Mean")]
+names(incidiB_yam)[names(incidiB_yam) == "Mean"] <- "I"
+
+res_parametric_si_B_yam <- estimate_R(incidiB_yam$I,
+                                method="parametric_si",
+                                config = make_config(list(
+                                  mean_si = 2.6,
+                                  std_si = 1.5))
+)
+
+res_parametric_si_B_yam$dates <- incidiB_yam$dates
+plot <- plot(res_parametric_si_B_yam, legend = FALSE)
+annotate_figure(plot,top = text_grob(expression(paste("R" ["0"]," Estimation ","- Skyride - 2011 -2020 - B_yamagata " )) , size = 12))
+
+
+df_restim_B_yam <- res_parametric_si_B_yam$R %>%
+  mutate(dates = map2(t_start, t_end, `:`)) %>%
+  select(-t_start, -t_end) %>%
+  unnest
+
+df_restim_B_yam = df_restim_B_yam[order(df_restim_B_yam[,'dates'],-df_restim_B_yam[,'Mean(R)']),]
+df_restim_B_yam = df_restim_B_yam[!duplicated(df_restim_B_yam$dates),]
+IBV_Y$date_index <- seq.int(nrow(IBV_Y))
+df_restim_B_yam <- merge(df_restim_B_yam,IBV_Y, by.x = c("dates"), by.y = c("date_index"))
+df_restim_B_yam <- as.data.frame(df_restim_B_yam)
+
+```
+
+
+
+
+## RSVA - Skyride Coalesecent R estim - 2011-2020
+
+```{r , echo=FALSE, fig.keep="last"}
+
+# Parametric Serial Interval
+incidiRSVA <-  RSVA[, c("dates", "Mean")]
+names(incidiRSVA)[names(incidiRSVA) == "Mean"] <- "I"
+
+res_parametric_si_RSVA <- estimate_R(incidiRSVA$I,
+                                method="parametric_si",
+                                config = make_config(list(
+                                  mean_si = 2.6,
+                                  std_si = 1.5))
+)
+
+res_parametric_si_RSVA$dates <- incidiRSVA$dates
+plot <- plot(res_parametric_si_RSVA, legend = FALSE)
+annotate_figure(plot,top = text_grob(expression(paste("R" ["0"]," Estimation ","- Skyride - 2011 -2020 - RSVA " )) , size = 12))
+
+
+df_restim_RSVA <- res_parametric_si_RSVA$R %>%
+  mutate(dates = map2(t_start, t_end, `:`)) %>%
+  select(-t_start, -t_end) %>%
+  unnest
+
+df_restim_RSVA = df_restim_RSVA[order(df_restim_RSVA[,'dates'],-df_restim_RSVA[,'Mean(R)']),]
+df_restim_RSVA = df_restim_RSVA[!duplicated(df_restim_RSVA$dates),]
+RSVA$date_index <- seq.int(nrow(RSVA))
+df_restim_RSVA <- merge(df_restim_RSVA,RSVA, by.x = c("dates"), by.y = c("date_index"))
+df_restim_RSVA <- as.data.frame(df_restim_RSVA)
+```
+
+
+## RSVB - Skyride Coalesecent R estim - 2011-2020
+
+```{r , echo=FALSE, fig.keep="last"}
+
+# Parametric Serial Interval
+incidiRSVB <-  RSVB[, c("dates", "Mean")]
+names(incidiRSVB)[names(incidiRSVB) == "Mean"] <- "I"
+
+res_parametric_si_RSVB <- estimate_R(incidiRSVB$I,
+                                method="parametric_si",
+                                config = make_config(list(
+                                  mean_si = 2.6,
+                                  std_si = 1.5))
+)
+
+res_parametric_si_RSVB$dates <- incidiRSVB$dates
+plot <- plot(res_parametric_si_RSVB, legend = FALSE)
+annotate_figure(plot,top = text_grob(expression(paste("R" ["0"]," Estimation ","- Skyride - 2011 -2020 - RSVB " )) , size = 12))
+
+
+df_restim_RSVB <- res_parametric_si_RSVB$R %>%
+  mutate(dates = map2(t_start, t_end, `:`)) %>%
+  select(-t_start, -t_end) %>%
+  unnest
+
+df_restim_RSVB = df_restim_RSVB[order(df_restim_RSVB[,'dates'],-df_restim_RSVB[,'Mean(R)']),]
+df_restim_RSVB = df_restim_RSVB[!duplicated(df_restim_RSVB$dates),]
+RSVB$date_index <- seq.int(nrow(RSVB))
+df_restim_RSVB <- merge(df_restim_RSVB,RSVB, by.x = c("dates"), by.y = c("date_index"))
+df_restim_RSVB <- as.data.frame(df_restim_RSVB)
+
+```
+
+
+
+
+## Combined estimate plot
+
+```{r}
+names(df_restim_IAVHI)[names(df_restim_IAVHI) == 'dates.y'] <- 'date'
+names(df_restim_IAVHI)[names(df_restim_IAVHI) == 'Mean(R)'] <- 'Mean-R-H1'
+names(df_restim_IAVH3)[names(df_restim_IAVH3) == 'dates.y'] <- 'date'
+names(df_restim_IAVH3)[names(df_restim_IAVH3) == 'Mean(R)'] <- 'Mean-R-H3'
+names(df_restim_B_vic)[names(df_restim_B_vic) == 'dates.y'] <- 'date'
+names(df_restim_B_vic)[names(df_restim_B_vic) == 'Mean(R)'] <- 'Mean-R-Bvic'
+names(df_restim_B_yam)[names(df_restim_B_yam) == 'dates.y'] <- 'date'
+names(df_restim_B_yam)[names(df_restim_B_yam) == 'Mean(R)'] <- 'Mean-R-Byam'
+names(df_restim_RSVA)[names(df_restim_RSVA) == 'dates.y'] <- 'date'
+names(df_restim_RSVA)[names(df_restim_RSVA) == 'Mean(R)'] <- 'Mean-R-RSVA'
+names(df_restim_RSVB)[names(df_restim_RSVB) == 'dates.y'] <- 'date'
+names(df_restim_RSVB)[names(df_restim_RSVB) == 'Mean(R)'] <- 'Mean-R-RSVB'
+
+
+restims <- merge(df_restim_IAVHI,df_restim_IAVH3, by ='date', all = TRUE)
+restims <- merge(restims,df_restim_B_vic, by ='date', all = TRUE)
+restims <- merge(restims,df_restim_B_yam, by ='date', all = TRUE)
+restims <- merge(restims,df_restim_RSVA, by ='date', all = TRUE)
+restims <- merge(restims,df_restim_RSVB, by ='date', all = TRUE)
+
+restimsrsv <- restims[,c('date','Mean-R-RSVA','Mean-R-RSVB')]
+restimsifv <- restims[,c('date','Mean-R-H1','Mean-R-H3','Mean-R-Bvic','Mean-R-Byam')]
+restims <- restims[,c('date','Mean-R-H1','Mean-R-H3','Mean-R-Bvic','Mean-R-Byam','Mean-R-RSVA','Mean-R-RSVB')]
+
+restims<- melt(restims, id = "date", measure = c('Mean-R-H1','Mean-R-H3','Mean-R-Bvic','Mean-R-Byam','Mean-R-RSVA','Mean-R-RSVB'))
+restims <- na.omit(restims)
+restimsrsv<- melt(restimsrsv, id = "date", measure =c('Mean-R-RSVA','Mean-R-RSVB'))
+restimsrsv <- na.omit(restimsrsv)
+restimsifv<- melt(restimsifv, id = "date", measure =c('Mean-R-H1','Mean-R-H3','Mean-R-Bvic','Mean-R-Byam'))
+restimsifv <- na.omit(restimsifv)
+
+ggplot(restims, aes(date, value, colour = variable)) +
+  geom_line() +
+  scale_colour_viridis_d(option = "plasma") +
+  xlab("Date") +
+  ylab("R estimate") +
+  ylim(0, 4) +
+  ggtitle("Skyride Coalesecent - R estimates - RSV + Influenza")
+  
+
+ggplot(restimsrsv, aes(date, value, colour = variable)) +
+  geom_line() +
+  scale_color_brewer(palette="Dark2") +
+  xlab("Date") +
+  ylab("R estimate") +
+  ylim(0, 4) +
+  ggtitle("Skyride Coalesecent - R estimates - RSV ")
+
+
+ggplot(restimsifv, aes(date, value, colour = variable)) +
+  geom_line() +
+  scale_colour_viridis_d(option = "plasma") +
+  xlab("Date") +
+  ylab("R estimate") +
+  ylim(0, 4) +
+  ggtitle("Skyride Coalesecent - R estimates - Influenza")
+```
