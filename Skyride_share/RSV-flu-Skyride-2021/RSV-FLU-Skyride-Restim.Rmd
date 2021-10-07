@@ -82,7 +82,7 @@ df_restim_IAVHI <- res_parametric_si_h1$R %>%
   unnest
 
 df_restim_IAVHI = df_restim_IAVHI[order(df_restim_IAVHI[,'dates'],-df_restim_IAVHI[,'Mean(R)']),]
-df_restim_IAVHI = df_restim_IAVHI[!duplicated(df_restim_IAVHI$dates),]
+df_restim_IAVHI = df_restim_IAVHI[!duplicated(df_restim_IAVHI$`Mean(R)`),]
 IAV_H1$date_index <- seq.int(nrow(IAV_H1))
 df_restim_IAVHI <- merge(df_restim_IAVHI,IAV_H1, by.x = c("dates"), by.y = c("date_index"))
 df_restim_IAVHI <- as.data.frame(df_restim_IAVHI)
@@ -115,7 +115,7 @@ df_restim_IAVH3 <- res_parametric_si_h3$R %>%
   unnest
 
 df_restim_IAVH3 = df_restim_IAVH3[order(df_restim_IAVH3[,'dates'],-df_restim_IAVH3[,'Mean(R)']),]
-df_restim_IAVH3 = df_restim_IAVH3[!duplicated(df_restim_IAVH3$dates),]
+df_restim_IAVH3 = df_restim_IAVH3[!duplicated(df_restim_IAVH3$`Mean(R)`),]
 IAV_H3$date_index <- seq.int(nrow(IAV_H3))
 df_restim_IAVH3 <- merge(df_restim_IAVH3,IAV_H3, by.x = c("dates"), by.y = c("date_index"))
 df_restim_IAVH3 <- as.data.frame(df_restim_IAVH3)
@@ -150,7 +150,7 @@ df_restim_B_vic <- res_parametric_si_B_vic$R %>%
   unnest
 
 df_restim_B_vic = df_restim_B_vic[order(df_restim_B_vic[,'dates'],-df_restim_B_vic[,'Mean(R)']),]
-df_restim_B_vic = df_restim_B_vic[!duplicated(df_restim_B_vic$dates),]
+df_restim_B_vic = df_restim_B_vic[!duplicated(df_restim_B_vic$`Mean(R)`),]
 IBV_V$date_index <- seq.int(nrow(IBV_V))
 df_restim_B_vic <- merge(df_restim_B_vic,IBV_V, by.x = c("dates"), by.y = c("date_index"))
 df_restim_B_vic <- as.data.frame(df_restim_B_vic)
@@ -185,7 +185,7 @@ df_restim_B_yam <- res_parametric_si_B_yam$R %>%
   unnest
 
 df_restim_B_yam = df_restim_B_yam[order(df_restim_B_yam[,'dates'],-df_restim_B_yam[,'Mean(R)']),]
-df_restim_B_yam = df_restim_B_yam[!duplicated(df_restim_B_yam$dates),]
+df_restim_B_yam = df_restim_B_yam[!duplicated(df_restim_B_yam$`Mean(R)`),]
 IBV_Y$date_index <- seq.int(nrow(IBV_Y))
 df_restim_B_yam <- merge(df_restim_B_yam,IBV_Y, by.x = c("dates"), by.y = c("date_index"))
 df_restim_B_yam <- as.data.frame(df_restim_B_yam)
@@ -197,6 +197,8 @@ df_restim_B_yam <- as.data.frame(df_restim_B_yam)
 
 ## RSVA - Skyride Coalesecent R estim - 2011-2020
 
+For both RSVA and RSVB the mean si was changed to 4.5 and std_si was changed to 0.894. (Cite: https://www.medrxiv.org/content/10.1101/2020.02.04.20020404v2.full?fbclid=IwAR1wsG0Bgr0h0lckr0PNIETlU47rIEfJXpwDdkNdyNRAbXjhG74mpCfqau)
+
 ```{r , echo=FALSE, fig.keep="last"}
 
 # Parametric Serial Interval
@@ -206,8 +208,8 @@ names(incidiRSVA)[names(incidiRSVA) == "Mean"] <- "I"
 res_parametric_si_RSVA <- estimate_R(incidiRSVA$I,
                                 method="parametric_si",
                                 config = make_config(list(
-                                  mean_si = 2.6,
-                                  std_si = 1.5))
+                                  mean_si = 4.5,
+                                  std_si = 0.894))
 )
 
 res_parametric_si_RSVA$dates <- incidiRSVA$dates
@@ -221,7 +223,7 @@ df_restim_RSVA <- res_parametric_si_RSVA$R %>%
   unnest
 
 df_restim_RSVA = df_restim_RSVA[order(df_restim_RSVA[,'dates'],-df_restim_RSVA[,'Mean(R)']),]
-df_restim_RSVA = df_restim_RSVA[!duplicated(df_restim_RSVA$dates),]
+df_restim_RSVA = df_restim_RSVA[!duplicated(df_restim_RSVA$`Mean(R)`),]
 RSVA$date_index <- seq.int(nrow(RSVA))
 df_restim_RSVA <- merge(df_restim_RSVA,RSVA, by.x = c("dates"), by.y = c("date_index"))
 df_restim_RSVA <- as.data.frame(df_restim_RSVA)
@@ -239,8 +241,8 @@ names(incidiRSVB)[names(incidiRSVB) == "Mean"] <- "I"
 res_parametric_si_RSVB <- estimate_R(incidiRSVB$I,
                                 method="parametric_si",
                                 config = make_config(list(
-                                  mean_si = 2.6,
-                                  std_si = 1.5))
+                                  mean_si = 4.5,
+                                  std_si = 0.894))
 )
 
 res_parametric_si_RSVB$dates <- incidiRSVB$dates
@@ -254,7 +256,7 @@ df_restim_RSVB <- res_parametric_si_RSVB$R %>%
   unnest
 
 df_restim_RSVB = df_restim_RSVB[order(df_restim_RSVB[,'dates'],-df_restim_RSVB[,'Mean(R)']),]
-df_restim_RSVB = df_restim_RSVB[!duplicated(df_restim_RSVB$dates),]
+df_restim_RSVB = df_restim_RSVB[!duplicated(df_restim_RSVB$`Mean(R)`),]
 RSVB$date_index <- seq.int(nrow(RSVB))
 df_restim_RSVB <- merge(df_restim_RSVB,RSVB, by.x = c("dates"), by.y = c("date_index"))
 df_restim_RSVB <- as.data.frame(df_restim_RSVB)
@@ -266,7 +268,7 @@ df_restim_RSVB <- as.data.frame(df_restim_RSVB)
 
 ## Combined estimate plot
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, }
 names(df_restim_IAVHI)[names(df_restim_IAVHI) == 'dates.y'] <- 'date'
 names(df_restim_IAVHI)[names(df_restim_IAVHI) == 'Mean(R)'] <- 'Mean-R-H1'
 names(df_restim_IAVH3)[names(df_restim_IAVH3) == 'dates.y'] <- 'date'
