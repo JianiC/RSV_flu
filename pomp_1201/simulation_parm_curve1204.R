@@ -39,7 +39,7 @@ rproc_euler_multinomial <- Csnippet("
   
   double beta1, beta2, foi1, foi2, seas1, seas2, N; 
   
-  double rate[32], trans[32];
+  double rate[49], trans[49];
 
   // sinusoidal seasonality (for both types)
   seas1 = 1 + amplitude1*cos(2.*3.1415*(t-tpeak1)/1.); // in units of years
@@ -58,140 +58,163 @@ rproc_euler_multinomial <- Csnippet("
   foi1 = beta1 * (I1_S2 + I1_I2 + I1_C2 + I1_R2 + eta1)/N; 
   foi2 = beta2 * (S1_I2 + I1_I2 + C1_I2 + R1_I2 + eta2)/N;
   
-  // Out of S1_S2
-  rate[0] = foi1;         // infection of S1_S1 -> I1_S2
-  rate[1] = foi2;         // infection of S1_S2 -> S1_I2
+  //birth (assume birth rate equal to death rate)
+ // rate[0] = births;
+  rate[0] = mu;
+  reulermultinom(1,N,&rate[0],dt,&trans[0]);
   
-  reulermultinom(2,S1_S2,&rate[0],dt,&trans[0]);
+ // trans[0] = rpois(rate[0] * dt);
+  
+  // Out of S1_S2
+  rate[1] = foi1;         // infection of S1_S1 -> I1_S2
+  rate[2] = foi2;         // infection of S1_S2 -> S1_I2
+  rate[3] = mu;            // death from S1_S2   
+                
+  reulermultinom(3,S1_S2,&rate[1],dt,&trans[1]);
   
   // Out of I1_S2
-  rate[2] = gamma1;                // recovery of I1_S2 -> C1_S2
-  rate[3] = psi * foi2;         // infection of IA_SB -> IA_IB 
+  rate[4] = gamma1;                // recovery of I1_S2 -> C1_S2
+  rate[5] = psi * foi2;         // infection of I1_S2 -> I1_I2 
+  rate[6] = mu;            // death from I1_S2  
   
-  reulermultinom(2,I1_S2,&rate[2],dt,&trans[2]);
+  reulermultinom(3,I1_S2,&rate[4],dt,&trans[4]);
   
     // Out of C1_S2
-  rate[4] = phi1;              // recovery of C1_S2 -> R1_S2
-  rate[5] = chi * foi2;         // infection of C1_S2 -> C1_I2
+  rate[7] = phi1;              // recovery of C1_S2 -> R1_S2
+  rate[8] = chi * foi2;         // infection of C1_S2 -> C1_I2
+  rate[9] = mu;            // death from C1_S2  
   
-  reulermultinom(2,C1_S2,&rate[4],dt,&trans[4]);
+  reulermultinom(3,C1_S2,&rate[7],dt,&trans[7]);
   
   // Out of R1_S2
-  rate[6] = w1;                // recovery of R1_S2->S1_S2
-  rate[7] = foi2;         // infection of R1_S2->R1_I2
+  rate[10] = w1;                // recovery of R1_S2->S1_S2
+  rate[11] = foi2;         // infection of R1_S2->R1_I2
+  rate[12] = mu;            // death from R1_S2  
   
-  reulermultinom(2,R1_S2,&rate[6],dt,&trans[6]);
+  reulermultinom(3,R1_S2,&rate[10],dt,&trans[10]);
 
   // Out of S1_I2
-  rate[8] = psi * foi1;         // infection of S1_I2 -> I1_I2
-  rate[9] = gamma2;         // infection of S1_I2 -> S1_C2
+  rate[13] = psi * foi1;         // infection of S1_I2 -> I1_I2
+  rate[14] = gamma2;         // infection of S1_I2 -> S1_C2
+  rate[15] = mu;            // death from S1_I2  
   
-  reulermultinom(2,S1_I2,&rate[8],dt,&trans[8]);
+  reulermultinom(3,S1_I2,&rate[13],dt,&trans[13]);
   
   // Out of I1_I2
-  rate[10] = gamma1;                // recovery of I1_I2 -> C1_I2
-  rate[11] = gamma2;         // infection of I1_I2 -> I1_C2 
+  rate[16] = gamma1;                // recovery of I1_I2 -> C1_I2
+  rate[17] = gamma2;         // infection of I1_I2 -> I1_C2 
+  rate[18] = mu;            // death from I1_I2  
   
-  reulermultinom(2,I1_I2,&rate[10],dt,&trans[10]);
+  reulermultinom(3,I1_I2,&rate[16],dt,&trans[16]);
   
   
     // Out of C1_I2
-  rate[12] = phi1;              // loss cross immunity from C1_I2->R1_I2
-  rate[13] = gamma2;            // recoveru of C1_I2-> C1_C2
+  rate[19] = phi1;              // loss cross immunity from C1_I2->R1_I2
+  rate[20] = gamma2;            // recoveru of C1_I2-> C1_C2
+  rate[21] = mu;            // death from C1_I2  
   
-  reulermultinom(2,C1_I2,&rate[12],dt,&trans[12]);
+  reulermultinom(3,C1_I2,&rate[19],dt,&trans[19]);
 
 
   // Out of R1_I2
   
-  rate[14] = w1;                // loss immunity R1_I2->S1_I2
-  rate[15] = gamma2;         // recovery of R1_I2->R1_R2
+  rate[22] = w1;                // loss immunity R1_I2->S1_I2
+  rate[23] = gamma2;         // recovery of R1_I2->R1_R2
+  rate[24] = mu;            // death from R1_I2  
   
-  reulermultinom(2,R1_I2,&rate[14],dt,&trans[14]);
+  reulermultinom(3,R1_I2,&rate[22],dt,&trans[22]);
 
 
   // Out of S1_C2
-  rate[16] = chi* foi1;         // infection of S1_C2 -> I1_C2
-  rate[17] = phi2;         // loss cross immunity S1_C2->S1_R2
+  rate[25] = chi* foi1;         // infection of S1_C2 -> I1_C2
+  rate[26] = phi2;         // loss cross immunity S1_C2->S1_R2
+  rate[27] = mu;            // death from S1_C2  
   
-  reulermultinom(2,S1_C2,&rate[16],dt,&trans[16]);
+  reulermultinom(3,S1_C2,&rate[25],dt,&trans[25]);
   
   // Out of I1_C2
-  rate[18] = gamma1;          // recovery of I1_C2 -> C1_C2
-  rate[19] = phi2;         // loss cross immunity I1_C2 -> I1_R2 
+  rate[28] = gamma1;          // recovery of I1_C2 -> C1_C2
+  rate[29] = phi2;         // loss cross immunity I1_C2 -> I1_R2 
+  rate[30] = mu;            // death from I1_C2  
   
-  reulermultinom(2,I1_C2,&rate[18],dt,&trans[18]);
+  reulermultinom(3,I1_C2,&rate[28],dt,&trans[28]);
   
 
     // Out of C1_C2
-  rate[20] = phi1;              // loss cross immunity from C1_C2->R1_C2
-  rate[21] = phi2;            // loss cross immunity C1_C2-> C1_R2
+  rate[31] = phi1;              // loss cross immunity from C1_C2->R1_C2
+  rate[32] = phi2;            // loss cross immunity C1_C2-> C1_R2
+  rate[33] = mu;            // death from C1_C2  
   
-  reulermultinom(2,C1_C2,&rate[20],dt,&trans[20]);
+  reulermultinom(3,C1_C2,&rate[31],dt,&trans[31]);
 
 
   // Out of R1_C2
   
-  rate[22] = w1;                // loss immunity R1_C2->S1_C2
-  rate[23] = phi2;         // ross cross immunity R1_C2-> R1_R2
+  rate[34] = w1;                // loss immunity R1_C2->S1_C2
+  rate[35] = phi2;         // ross cross immunity R1_C2-> R1_R2
+  rate[36] = mu;            // death from R1_C2  
   
-  reulermultinom(2,R1_C2,&rate[22],dt,&trans[22]);
+  reulermultinom(3,R1_C2,&rate[34],dt,&trans[34]);
   
   
   // Out of S1_R2
-  rate[24] = foi1;         // infection of S1_R2 -> I1_R2
-  rate[25] =  w2;         // loss  immunity S1_R2->S1_S2
+  rate[37] = foi1;         // infection of S1_R2 -> I1_R2
+  rate[38] =  w2;         // loss  immunity S1_R2->S1_S2
+  rate[39] = mu;            // death from S1_R2  
   
-  reulermultinom(2,S1_R2,&rate[24],dt,&trans[24]);
+  reulermultinom(3,S1_R2,&rate[37],dt,&trans[37]);
   
   // Out of I1_R2
-  rate[26] = gamma1;          // recovery of I1_R2 -> C1_R2
-  rate[27] = w2;         // loss immunity I1_R2 -> I1_S2 
+  rate[40] = gamma1;          // recovery of I1_R2 -> C1_R2
+  rate[41] = w2;         // loss immunity I1_R2 -> I1_S2 
+  rate[42] = mu;            // death from I1_R2  
   
-  reulermultinom(2,I1_R2,&rate[26],dt,&trans[26]);
+  reulermultinom(3,I1_R2,&rate[40],dt,&trans[40]);
   
 
    // Out of C1_R2
-  rate[28] = phi1;              // loss cross immunity from C1_R2->R1_R2
-  rate[29] = w2;            // loss immunity C1_R2-> C1_S2
+  rate[43] = phi1;              // loss cross immunity from C1_R2->R1_R2
+  rate[44] = w2;            // loss immunity C1_R2-> C1_S2
+  rate[45] = mu;            // death from C1_R2  
   
-  reulermultinom(2,C1_R2,&rate[28],dt,&trans[28]);
+  reulermultinom(3,C1_R2,&rate[43],dt,&trans[43]);
 
 
   // Out of R1_R2
   
-  rate[30] = w1;                // loss immunity R1_R2->S1_R2
-  rate[31] = w2;         // lossimmunity R1_R2-> R1_S2
+  rate[46] = w1;                // loss immunity R1_R2->S1_R2
+  rate[47] = w2;         // lossimmunity R1_R2-> R1_S2
+  rate[48] = mu;            // death from S1_S2  
   
-  reulermultinom(2,R1_R2,&rate[30],dt,&trans[30]);
+  reulermultinom(3,R1_R2,&rate[46],dt,&trans[46]);
     
   
-  S1_S2 += trans[6] + trans[25] - trans[0] - trans[1];
-  I1_S2 += trans[0] + trans[27] - trans[2] - trans[3];
-  C1_S2 += trans[2] + trans[29] - trans[4] - trans[5];
-  R1_S2 += trans[4] + trans[31] - trans[6] - trans[7];
+  S1_S2 += trans[0] + trans[10] + trans[38] - trans[1] - trans[2] - trans[3];
+  I1_S2 += trans[1] + trans[41] - trans[4] - trans[5] - trans[6];
+  C1_S2 += trans[4] + trans[44] - trans[7] - trans[8] - trans[9];
+  R1_S2 += trans[7] + trans[47] - trans[10] - trans[11] - trans[12];
   
-  S1_I2 += trans[14] + trans[1] - trans[8] - trans[9];
-  I1_I2 += trans[8] + trans[3] - trans[10] - trans[11];
-  C1_I2 += trans[10] + trans[5] - trans[12] - trans[13];
-  R1_I2 += trans[12] + trans[7] - trans[14] - trans[15];
+  S1_I2 += trans[22] + trans[2] - trans[13] - trans[14] - trans[15];
+  I1_I2 += trans[13] + trans[5] - trans[16] - trans[17] - trans[18];
+  C1_I2 += trans[16] + trans[8] - trans[19] - trans[20] - trans[21];
+  R1_I2 += trans[19] + trans[11] - trans[22] - trans[23] - trans[24];
   
-  S1_C2 += trans[22] + trans[9] - trans[16] - trans[17];
-  I1_C2 += trans[16] + trans[11] - trans[18] - trans[19];
-  C1_C2 += trans[18] + trans[13] - trans[20] - trans[21];
-  R1_C2 += trans[20] + trans[15] - trans[22] - trans[23];
+  S1_C2 += trans[34] + trans[14] - trans[25] - trans[26] - trans[27];
+  I1_C2 += trans[25] + trans[17] - trans[28] - trans[29] - trans[30];
+  C1_C2 += trans[28] + trans[20] - trans[31] - trans[32] - trans[33];
+  R1_C2 += trans[31] + trans[23] - trans[34] - trans[35] - trans[36];
   
-  S1_R2 += trans[30] + trans[17] - trans[24] - trans[25];
-  I1_R2 += trans[24] + trans[19] - trans[26] - trans[27];
-  C1_R2 += trans[26] + trans[21] - trans[28] - trans[29];
-  R1_R2 += trans[28] + trans[23] - trans[30] - trans[31];
+  S1_R2 += trans[46] + trans[26] - trans[37] - trans[38] - trans[39];
+  I1_R2 += trans[37] + trans[29] - trans[40] - trans[41] - trans[42];
+  C1_R2 += trans[40] + trans[32] - trans[43] - trans[44] - trans[45];
+  R1_R2 += trans[43] + trans[35] - trans[46] - trans[47] - trans[48];
   
 
-  Kprim1 += trans[2];      // from I1_S2->C1_S2
-  Kprim2 += trans[9];     // from S1_I2 ->S1_C2
+  Kprim1 += trans[4];      // from I1_S2->C1_S2
+  Kprim2 += trans[14];     // from S1_I2 ->S1_C2
   
-  Ksec1 += trans[10] + trans[18] + trans[26]; // from I1_I2, I1_C2, I1_R2
-  Ksec2 += trans[11] + trans[13] + trans[15]; // from I1_I2, C1_I2, R1_I2
+  Ksec1 += trans[16] + trans[28] + trans[40]; // from I1_I2, I1_C2, I1_R2
+  Ksec2 += trans[17] + trans[20] + trans[23]; // from I1_I2, C1_I2, R1_I2
   
   K1 += Kprim1 + Ksec1;           // true incidence of pathogen1
   K2 += Kprim2 + Ksec2;           // true incidence of pathogen2
@@ -262,7 +285,7 @@ rinit_ee <- Csnippet("
 det_skel <- Csnippet("
 
   double beta1, beta2, foi1, foi2, seas1, seas2, N; 
-  double rate[32];
+  double rate[49];
 
     
  // sinusoidal seasonality (for both types)
@@ -283,99 +306,119 @@ det_skel <- Csnippet("
   foi1 = beta1 * (I1_S2 + I1_I2 + I1_C2 + I1_R2 + eta1)/N; 
   foi2 = beta2 * (S1_I2 + I1_I2 + C1_I2 + R1_I2 + eta2)/N;
   
+  
+  //birth
+  rate[0] = N * mu;
+  
   // Out of S1_S2
-  rate[0] = S1_S2 * foi1;         // infection of S1_S1 -> I1_S2
-  rate[1] = S1_S2 * foi2;         // infection of S1_S2 -> S1_I2
+  rate[1] = S1_S2 * foi1;         // infection of S1_S1 -> I1_S2
+  rate[2] = S1_S2 * foi2;         // infection of S1_S2 -> S1_I2
+  rate[3] = S1_S2 * mu;            // death from S1_S2  
 
   // Out of I1_S2
-  rate[2] = I1_S2 * gamma1;                // recovery of I1_S2 -> C1_S2
-  rate[3] = I1_S2 * psi * foi2;         // infection of IA_SB -> IA_IB 
+  rate[4] = I1_S2 * gamma1;                // recovery of I1_S2 -> C1_S2
+  rate[5] = I1_S2 * psi * foi2;         // infection of IA_SB -> IA_IB 
+  rate[6] = I1_S2 * mu;            // death from I1_S2  
   
   // Out of C1_S2
-  rate[4] = C1_S2 * phi1;              // recovery of C1_S2 -> R1_S2
-  rate[5] = C1_S2 * chi * foi2;         // infection of C1_S2 -> C1_I2
+  rate[7] = C1_S2 * phi1;              // recovery of C1_S2 -> R1_S2
+  rate[8] = C1_S2 * chi * foi2;         // infection of C1_S2 -> C1_I2
+  rate[9] = C1_S2 * mu;            // death from C1_S2 
   
   // Out of R1_S2
-  rate[6] = R1_S2 * w1;                // recovery of R1_S2->S1_S2
-  rate[7] = R1_S2 * foi2;         // infection of R1_S2->R1_I2
+  rate[10] = R1_S2 * w1;                // recovery of R1_S2->S1_S2
+  rate[11] = R1_S2 * foi2;         // infection of R1_S2->R1_I2
+  rate[12] = R1_S2 * mu;            // death from R1_S2 
   
    // Out of S1_I2
-  rate[8] = S1_I2 * psi * foi1;         // infection of S1_I2 -> I1_I2
-  rate[9] = S1_I2 * gamma2;         // infection of S1_I2 -> S1_C2
+  rate[13] = S1_I2 * psi * foi1;         // infection of S1_I2 -> I1_I2
+  rate[14] = S1_I2 * gamma2;         // infection of S1_I2 -> S1_C2
+  rate[15] = S1_I2 * mu;            // death from S1_I2  
   
     // Out of I1_I2
-  rate[10] = I1_I2 * gamma1;                // recovery of I1_I2 -> C1_I2
-  rate[11] = I1_I2 * gamma2;         // infection of I1_I2 -> I1_C2 
+  rate[16] = I1_I2 * gamma1;                // recovery of I1_I2 -> C1_I2
+  rate[17] = I1_I2 * gamma2;         // infection of I1_I2 -> I1_C2
+  rate[18] = I1_I2 * mu;            // death from I1_I2 
   
   // Out of C1_I2
-  rate[12] = C1_I2 * phi1;              // loss cross immunity from C1_I2->R1_I2
-  rate[13] = C1_I2 * gamma2;            // recoveru of C1_I2-> C1_C2
+  rate[19] = C1_I2 * phi1;              // loss cross immunity from C1_I2->R1_I2
+  rate[20] = C1_I2 * gamma2;            // recoveru of C1_I2-> C1_C2
+  rate[21] = C1_I2 * mu;            // death from C1_I2 
   
     // Out of R1_I2
-  rate[14] = R1_I2 * w1;                // loss immunity R1_I2->S1_I2
-  rate[15] = R1_I2 * gamma2;         // recovery of R1_I2->R1_R2
+  rate[22] = R1_I2 * w1;                // loss immunity R1_I2->S1_I2
+  rate[23] = R1_I2 * gamma2;         // recovery of R1_I2->R1_R2
+  rate[24] = R1_I2 * mu;            // death from R1_I2
   
   // Out of S1_C2
-  rate[16] = S1_C2 * chi* foi1;         // infection of S1_C2 -> I1_C2
-  rate[17] = S1_C2 * phi2;         // loss cross immunity S1_C2->S1_R2
+  rate[25] = S1_C2 * chi* foi1;         // infection of S1_C2 -> I1_C2
+  rate[26] = S1_C2 * phi2;         // loss cross immunity S1_C2->S1_R2
+  rate[27] = S1_C2 * mu;            // death from S1_C2 
   
   // Out of I1_C2
-  rate[18] = I1_C2 * gamma1;          // recovery of I1_C2 -> C1_C2
-  rate[19] = I1_C2 * phi2;         // loss cross immunity I1_C2 -> I1_R2 
+  rate[28] = I1_C2 * gamma1;          // recovery of I1_C2 -> C1_C2
+  rate[29] = I1_C2 * phi2;         // loss cross immunity I1_C2 -> I1_R2
+  rate[30] = I1_C2 * mu;            // death from I1_C2 
   
   // Out of C1_C2
-  rate[20] = C1_C2 * phi1;              // loss cross immunity from C1_C2->R1_C2
-  rate[21] = C1_C2 * phi2;            // loss cross immunity C1_C2-> C1_R2
+  rate[31] = C1_C2 * phi1;              // loss cross immunity from C1_C2->R1_C2
+  rate[32] = C1_C2 * phi2;            // loss cross immunity C1_C2-> C1_R2
+  rate[33] = C1_C2 * mu;            // death from C1_C2  
 
   // Out of R1_C2
-  rate[22] = R1_C2 * w1;                // loss immunity R1_C2->S1_C2
-  rate[23] = R1_C2 * phi2;         // loss cross immunity R1_C2-> R1_R2
+  rate[34] = R1_C2 * w1;                // loss immunity R1_C2->S1_C2
+  rate[35] = R1_C2 * phi2;         // loss cross immunity R1_C2-> R1_R2
+  rate[36] = R1_C2 * mu;            // death from R1_C2  
   
   // Out of S1_R2
-  rate[24] = S1_R2 * foi1;         // infection of S1_R2 -> I1_R2
-  rate[25] =  S1_R2 * w2;         // loss  immunity S1_R2->S1_S2
+  rate[37] = S1_R2 * foi1;         // infection of S1_R2 -> I1_R2
+  rate[38] = S1_R2 * w2;         // loss  immunity S1_R2->S1_S2
+  rate[39] = S1_R2 * mu;            // death from S1_R2 
   
   // Out of I1_R2
-  rate[26] = I1_R2 * gamma1;          // recovery of I1_R2 -> C1_R2
-  rate[27] = I1_R2 * w2;         // loss immunity I1_R2 -> I1_S2 
+  rate[40] = I1_R2 * gamma1;          // recovery of I1_R2 -> C1_R2
+  rate[41] = I1_R2 * w2;         // loss immunity I1_R2 -> I1_S2
+  rate[42] = I1_R2 * mu;            // death from I1_R2 
   
     // Out of C1_R2
-  rate[28] = C1_R2 * phi1;              // loss cross immunity from C1_R2->R1_R2
-  rate[29] = C1_R2 * w2;            // loss immunity C1_R2-> C1_S2
+  rate[43] = C1_R2 * phi1;              // loss cross immunity from C1_R2->R1_R2
+  rate[44] = C1_R2 * w2;            // loss immunity C1_R2-> C1_S2
+  rate[45] = C1_R2 * mu;            // death from C1_R2
   
     // Out of R1_R2
-  rate[30] = R1_R2 * w1;                // loss immunity R1_R2->S1_R2
-  rate[31] = R1_R2 * w2;         // lossimmunity R1_R2-> R1_S2
+  rate[46] = R1_R2 * w1;                // loss immunity R1_R2->S1_R2
+  rate[47] = R1_R2 * w2;         // lossimmunity R1_R2-> R1_S2
+  rate[48] = R1_R2 * mu;            // death from S1_S2 
   
   
   // transitions 
   
-  DS1_S2 = rate[6] + rate[25] - rate[0] - rate[1];
-  DI1_S2 = rate[0] + rate[27] - rate[2] - rate[3];
-  DC1_S2 = rate[2] + rate[29] - rate[4] - rate[5];
-  DR1_S2 = rate[4] + rate[31] - rate[6] - rate[7];
+  DS1_S2 = rate[0] + rate[10] + rate[38] - rate[1] - rate[2] - rate[3];
+  DI1_S2 = rate[1] + rate[41] - rate[4] - rate[5] - rate[6];
+  DC1_S2 = rate[4] + rate[44] - rate[7] - rate[8] - rate[9];
+  DR1_S2 = rate[7] + rate[47] - rate[10] - rate[11] - rate[12];
   
-  DS1_I2 = rate[14] + rate[1] - rate[8] - rate[9];
-  DI1_I2 = rate[8] + rate[3] - rate[10] - rate[11];
-  DC1_I2 = rate[10] + rate[5] - rate[12] - rate[13];
-  DR1_I2 = rate[12] + rate[7] - rate[14] - rate[15];
+  DS1_I2 = rate[22] + rate[2] - rate[13] - rate[14] - rate[15];
+  DI1_I2 = rate[13] + rate[5] - rate[16] - rate[17] - rate[18];
+  DC1_I2 = rate[16] + rate[8] - rate[19] - rate[20] - rate[21];
+  DR1_I2 = rate[19] + rate[11] - rate[22] - rate[23] - rate[24];
   
-  DS1_C2 = rate[22] + rate[9] - rate[16] - rate[17];
-  DI1_C2 = rate[16] + rate[11] - rate[18] - rate[19];
-  DC1_C2 = rate[18] + rate[13] - rate[20] - rate[21];
-  DR1_C2 = rate[20] + rate[15] - rate[22] - rate[23];
+  DS1_C2 = rate[34] + rate[14] - rate[25] - rate[26] - rate[27];
+  DI1_C2 = rate[25] + rate[17] - rate[28] - rate[29] - rate[30];
+  DC1_C2 = rate[28] + rate[20] - rate[31] - rate[32] - rate[33];
+  DR1_C2 = rate[31] + rate[23] - rate[34] - rate[35] - rate[36];
   
-  DS1_R2 = rate[30] + rate[17] - rate[24] - rate[25];
-  DI1_R2 = rate[24] + rate[19] - rate[26] - rate[27];
-  DC1_R2 = rate[26] + rate[21] - rate[28] - rate[29];
-  DR1_R2 = rate[28] + rate[23] - rate[30] - rate[31];
+  DS1_R2 = rate[46] + rate[26] - rate[37] - rate[38] - rate[39];
+  DI1_R2 = rate[37] + rate[29] - rate[40] - rate[41] - rate[42];
+  DC1_R2 = rate[40] + rate[32] - rate[43] - rate[44] - rate[45];
+  DR1_R2 = rate[43] + rate[35] - rate[46] - rate[47] - rate[48];
   
 
-  DKprim1 = rate[2];      // from I1_S2->C1_S2
-  DKprim2 = rate[9];     // from S1_I2 ->S1_C2
+  DKprim1 = rate[4];      // from I1_S2->C1_S2
+  DKprim2 = rate[14];     // from S1_I2 ->S1_C2
   
-  DKsec1 = rate[10] + rate[18] + rate[26]; // from I1_I2, I1_C2, I1_R2
-  DKsec2 = rate[11] + rate[13] + rate[15]; // from I1_I2, C1_I2, R1_I2
+  DKsec1 = rate[16] + rate[28] + rate[40]; // from I1_I2, I1_C2, I1_R2
+  DKsec2 = rate[17] + rate[20] + rate[23]; // from I1_I2, C1_I2, R1_I2
   
   DK1 = DKprim1 + DKsec1;           // true incidence of pathogen1
   DK2 = DKprim2 + DKsec2;           // true incidence of pathogen2
@@ -432,7 +475,7 @@ make_pomp_model <- function(df, time_start_sim, dt=1) {
   model_params = c("R01","R02", "gamma1", "gamma2",
                    "w1","w2","eta1", "eta2", "phi1", "phi2",
                    "psi","chi", "rho1", "rho2",
-                   "amplitude1", "tpeak1", "amplitude2", "tpeak2", "pop")
+                   "amplitude1", "tpeak1", "amplitude2", "tpeak2", "pop","mu")
   
   # Model variable names
   model_variables = c("S1_S2","I1_S2", "C1_S2","R1_S2",
@@ -536,7 +579,7 @@ simulate_tss <- function(params, give_everything = FALSE, show_progress = TRUE,.
                      eta1=365., eta2=365., rho1 =0.0014, rho2 =  0.0004, 
                      amplitude1=0.2238291, amplitude2=0.183653, 
                      tpeak1=0.8571905, tpeak2 = 0.1401407,
-                     pop=2.6e7)
+                     pop=2.6e7,mu=0.005)
   
   guess1_params <- unlist(guess1_params) 
   
@@ -617,7 +660,7 @@ trajectory_plot<-function(data,test.labs){
 
 ## 1. impact of R0 of IAV
 
-params <- data.frame(R0 = 2., chi =1, psi =1 ,phi = 365/30,  
+param_values <- data.frame(R0 = 2., chi =1, psi =1 ,phi = 365/30,  
                            rel = c(1,1.2,0.8))
 
 
@@ -626,22 +669,22 @@ c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values,
 
 test.labs <-c("a"="relative R0 = 1","b"="relative R0 = 1.2","c"="relative R0 = 0.8")
 plot1<-trajectory_plot(c_facet_data,test.labs)
-plot1
+plot1->testRO
 
 
 ## 3. impact of psi
 
-param_values <- data.frame(R0 = 2., chi =1, psi = c(1, 0.6, 0.2), phi = 365/30,  
+param_values <- data.frame(R0 = 2., chi =1, psi = c(1, 0.6, 2), phi = 365/30,  
                            rel = 0.9)
 
-test.labs <-c("a"="psi = 1","b"="psi=0.5","c"="psi= 2")
+test.labs <-c("a"="psi = 1","b"="psi=0.6","c"="psi= 2")
 
 c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values, 
                        give_everything = TRUE, show_progress = FALSE)
 
 
 plot1<-trajectory_plot(c_facet_data,test.labs)
-plot1
+plot1->testpsi
 
 
 ## 3. impact of chi
@@ -654,7 +697,7 @@ c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values,
 
 
 plot1<-trajectory_plot(c_facet_data,test.labs)
-plot1
+plot1->testchi
 
 
 
@@ -668,4 +711,6 @@ c_facet_data <- map_df(1:3, multi_simulate_tss, params = param_values,
 
 test.labs <-c("a"="phi = 365/30","b"="phi =365/90","c"="phi = 365/300")
 plot1<-trajectory_plot(c_facet_data,test.labs)
-plot1
+plot1->testphi
+
+Plot<-cowplot::plot_grid(testRO,testpsi,testchi, ncol=1, align='v',rel_heights = c(1,1,1))
