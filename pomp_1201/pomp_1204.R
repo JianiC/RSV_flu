@@ -45,12 +45,14 @@ rproc_euler_multinomial <- Csnippet("
   beta2 = R02*seas2*gamma2; 
 
 
-  // forces of infection
-  N = S1_S2 + I1_S2 + C1_S2 + R1_S2 + S1_I2 + I1_I2 + C1_I2 + R1_I2 + S1_C2 + I1_C2 + C1_C2 + R1_C2 + S1_R2 + I1_R2 + C1_R2 + R1_R2;
+  // total population size
+  N = S1_S2 + I1_S2 + C1_S2 + R1_S2 + S1_I2 + I1_I2 + C1_I2 + R1_I2 + S1_C2 + 
+      I1_C2 + C1_C2 + R1_C2 + S1_R2 + I1_R2 + C1_R2 + R1_R2;
   
   //I1_sum = I1_S2 + I1_I2 + I1_C2 + I1_R2;
   //I2_sum = S1_I2 + I1_I2 + C1_I2 + R1_I2;
 
+  // forces of infection
   foi1 = beta1 * (I1_S2 + I1_I2 + I1_C2 + I1_R2 + eta1)/N; 
   foi2 = beta2 * (S1_I2 + I1_I2 + C1_I2 + R1_I2 + eta2)/N;
   
@@ -91,32 +93,31 @@ rproc_euler_multinomial <- Csnippet("
 
   // Out of S1_I2
   rate[13] = psi * foi1;         // infection of S1_I2 -> I1_I2
-  rate[14] = gamma2;         // infection of S1_I2 -> S1_C2
-  rate[15] = mu;            // death from S1_I2  
+  rate[14] = gamma2;             // infection of S1_I2 -> S1_C2
+  rate[15] = mu;                 // death from S1_I2  
   
   reulermultinom(3,S1_I2,&rate[13],dt,&trans[13]);
   
   // Out of I1_I2
   rate[16] = gamma1;                // recovery of I1_I2 -> C1_I2
-  rate[17] = gamma2;         // infection of I1_I2 -> I1_C2 
-  rate[18] = mu;            // death from I1_I2  
+  rate[17] = gamma2;                // infection of I1_I2 -> I1_C2 
+  rate[18] = mu;                    // death from I1_I2  
   
   reulermultinom(3,I1_I2,&rate[16],dt,&trans[16]);
   
   
-    // Out of C1_I2
+  // Out of C1_I2
   rate[19] = phi1;              // loss cross immunity from C1_I2->R1_I2
   rate[20] = gamma2;            // recoveru of C1_I2-> C1_C2
-  rate[21] = mu;            // death from C1_I2  
+  rate[21] = mu;                // death from C1_I2  
   
   reulermultinom(3,C1_I2,&rate[19],dt,&trans[19]);
 
 
   // Out of R1_I2
-  
-  rate[22] = w1;                // loss immunity R1_I2->S1_I2
+  rate[22] = w1;             // loss immunity R1_I2->S1_I2
   rate[23] = gamma2;         // recovery of R1_I2->R1_R2
-  rate[24] = mu;            // death from R1_I2  
+  rate[24] = mu;             // death from R1_I2  
   
   reulermultinom(3,R1_I2,&rate[22],dt,&trans[22]);
 
@@ -292,9 +293,9 @@ det_skel <- Csnippet("
   beta2 = R02*seas2*gamma2; 
 
 
-  // forces of infection
-  
-  N = S1_S2 + I1_S2 + C1_S2 + R1_S2 + S1_I2 + I1_I2 + C1_I2 + R1_I2 + S1_C2 + I1_C2 + C1_C2 + R1_C2 + S1_R2 + I1_R2 + C1_R2 + R1_R2;
+  // population size
+  N = S1_S2 + I1_S2 + C1_S2 + R1_S2 + S1_I2 + I1_I2 + C1_I2 + R1_I2 + S1_C2 + 
+      I1_C2 + C1_C2 + R1_C2 + S1_R2 + I1_R2 + C1_R2 + R1_R2;
 
   //I1_sum = I1_S2 + I1_I2 + I1_C2 + I1_R2;
   //I2_sum = S1_I2 + I1_I2 + C1_I2 + R1_I2;
@@ -309,22 +310,22 @@ det_skel <- Csnippet("
   // Out of S1_S2
   rate[1] = S1_S2 * foi1;         // infection of S1_S1 -> I1_S2
   rate[2] = S1_S2 * foi2;         // infection of S1_S2 -> S1_I2
-  rate[3] = S1_S2 * mu;            // death from S1_S2  
+  rate[3] = S1_S2 * mu;           // death from S1_S2  
 
   // Out of I1_S2
-  rate[4] = I1_S2 * gamma1;                // recovery of I1_S2 -> C1_S2
+  rate[4] = I1_S2 * gamma1;             // recovery of I1_S2 -> C1_S2
   rate[5] = I1_S2 * psi * foi2;         // infection of IA_SB -> IA_IB 
-  rate[6] = I1_S2 * mu;            // death from I1_S2  
+  rate[6] = I1_S2 * mu;                // death from I1_S2  
   
   // Out of C1_S2
   rate[7] = C1_S2 * phi1;              // recovery of C1_S2 -> R1_S2
-  rate[8] = C1_S2 * chi * foi2;         // infection of C1_S2 -> C1_I2
-  rate[9] = C1_S2 * mu;            // death from C1_S2 
+  rate[8] = C1_S2 * chi * foi2;        // infection of C1_S2 -> C1_I2
+  rate[9] = C1_S2 * mu;               // death from C1_S2 
   
   // Out of R1_S2
   rate[10] = R1_S2 * w1;                // recovery of R1_S2->S1_S2
-  rate[11] = R1_S2 * foi2;         // infection of R1_S2->R1_I2
-  rate[12] = R1_S2 * mu;            // death from R1_S2 
+  rate[11] = R1_S2 * foi2;              // infection of R1_S2->R1_I2
+  rate[12] = R1_S2 * mu;               // death from R1_S2 
   
    // Out of S1_I2
   rate[13] = S1_I2 * psi * foi1;         // infection of S1_I2 -> I1_I2
@@ -455,6 +456,17 @@ rmeas_poisson <- Csnippet("
   total2 = rpois(rho2*K2);
   
 ")
+
+# regular parameters for the full model
+
+rp_vals <- c(R01 = 1, gamma1=365./9, w1=1./1.,
+             R02 = 1, gamma2=365./3, w2=1./1.,
+             phi1=365/30, phi2=365/30, psi =0, chi=0, 
+             eta1=365., eta2=365.,rho1=0, rho2=0, 
+             amplitude1=0, tpeak1=0, amplitude2=0, tpeak2=0,pop=Npop, mu=0)
+
+t_start <- -100
+
 ############################################################################
 # assign values for model parameters and initial conditions -----------------
 ############################################################################
@@ -484,7 +496,10 @@ make_pomp_model <- function(df, time_start_sim, dt=1) {
   dmeas <- dmeas_poisson
   rmeas <- rmeas_poisson
   
-  po <- pomp(
+  covar <- df %.>% 
+    select(., time, N)
+  
+  pomp(
     data = df,
     times = "time",
     t0 = time_start_sim,
@@ -494,20 +509,24 @@ make_pomp_model <- function(df, time_start_sim, dt=1) {
     dmeasure = dmeas,
     rmeasure = rmeas, 
     rinit = rinit_ee,
-    accumvars =c ("Kprim1","Ksec1","Kprim2","Ksec2","K1", "K2" ),
+    covar = covariate_table(covar, times = "time", order = "constant"),
+    covarnames = "N",
+    accumvars =c("Kprim1","Ksec1","Kprim2","Ksec2","K1", "K2" ),
     statenames = c(model_variables, c("Kprim1","Ksec1","Kprim2","Ksec2","K1", "K2")),
-    paramnames = c(model_params, model_ic_params)
+    paramnames = c(model_params, model_ic_params),
+    params = rp_vals
   )
   
-  return(po)
 }
+
+if(FALSE) {
 
 set.seed(594709947L)
 stopifnot(packageVersion("pomp")>="2.0.9.1")
 RNGkind("L'Ecuyer-CMRG")
 
 
-t_start <- -100 ## discard first 100ys
+ ## discard first 100ys
 
 
 
@@ -525,11 +544,7 @@ data %>%
 
 # set a default vector of parameters: requirement of the objective function 
 
-rp_vals <- c(R01 = 1, gamma1=365./9, w1=1./1.,
-             R02 = 1, gamma2=365./3, w2=1./1.,
-             phi1=365/30, phi2=365/30, psi =1, chi=1, 
-             eta1=365., eta2=365.,rho1=0, rho2=0, 
-             amplitude1=0, tpeak1=0, amplitude2=0, tpeak2=0,pop=Npop, mu=0)
+
 
 SIRS2_independent_endemic_equilibrium <- function(params){
   S1 <- 1/params[["R01"]]
@@ -724,7 +739,7 @@ outDEoptim <- DEoptim(of_ga_null, ## from pomp_ga integration
                                 rho_A = 0.01, rho_B = 0.01),
                       control = DEoptim.control(NP = 499, itermax=10000, F=0.8, CR=0.5,p=0.2,
                                                 reltol=1e-3,
-                                                parallelType=1,cluster=cl ))
+                                                parallelType=1,cluster=cl))
 
 #######################################################################################################
 
@@ -946,3 +961,4 @@ save(result_null, file = "result_null.Rdata")
 # save(result_fixphi, file = "result_fixphi.Rdata")
 # #######################################################################################3
 
+}
