@@ -1,0 +1,10 @@
+res <- (
+  DE_traj_match(df = pomp_data_hhs1_arsv, 
+                param_constraints = coinf_param_constraints, 
+                params = rp_vals_def,
+                ode_control = list(method = "ode23"), 
+                hypo_name = "co-infection", 
+                hhs_reg = 1, 
+                tot1_name = "RSV", 
+                tot2_name = "fluA")
+)

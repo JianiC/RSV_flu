@@ -1,0 +1,24 @@
+{
+    "id": "F0334AF5",
+    "path": "~/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/neutral_fluA/test_script.R",
+    "project_path": "neutral_fluA/test_script.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": true,
+    "created": 1639109560276.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "cursorPosition": "10,54",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1639106762,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1639109608205,
+    "read_only": false,
+    "read_only_alternatives": []
+}
