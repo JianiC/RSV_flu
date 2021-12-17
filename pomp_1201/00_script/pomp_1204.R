@@ -280,7 +280,7 @@ make_pomp <- function(df, time_start_sim = -100) {
   # Npop variable will be updated based on the data  
   rp_vals <- c(R01 = 1, gamma1=365./9, w1=1,
                R02 = 1, gamma2=365./3, w2=1,
-               phi1=365/30, phi2=365/30, psi =0.0, chi=0.0, 
+               phi1=365/30, phi2=365/30, psi =1, chi=1, 
                eta1=365., eta2=365.,rho1 = 0, rho2 = 0, 
                amplitude1=0.0, tpeak1=0.0, amplitude2=0.0, tpeak2=0.0, 
                pop=Npop, 

@@ -96,15 +96,33 @@
   
   
 ## plot trajectory fit
+  inc_data_fit<-inc_data_perdic%>%
+    mutate(HHSregion=HHS_REGION)%>%
+    pivot_wider(names_from = virus, values_from = cases)%>%
+    drop_na()%>%
+    mutate(method=case_when(
+      time<=6.5 ~ "Fit",
+      time>6.5 ~ "predict"
+    ))
+
   traj_fit_arsv<-rbind(traj_fit_arsv_neutral,traj_fit_arsv_psi,traj_fit_arsv_chi,traj_fit_arsv_coinfect)
   traj_fit_arsv%>%
     mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
-    ggplot(aes(x=time+2011,y=cases,color=hypothesis,linetype=type))+
-    geom_line()+
-    facet_grid(HHSregion~.)+
+    mutate(method=case_when(
+      time<=6.5 ~ "Fit",
+      time>6.5 ~ "predict"
+    ))%>%
+    ggplot(aes(x=time+2011,y=cases))+
+    
+    geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+
+    geom_area(data=inc_data_fit,aes(x=date,y=fluA),fill="gray",alpha=0.4)+
+    geom_line(aes(color=hypothesis,linetype=type))+
+    facet_grid(HHSregion~method,scales="free_x",space="free")+
     scale_colour_brewer(palette = "Dark2")+
     theme_bw()+
-    ylab("time(weeks)")
+    xlab("time(weeks)")
+    
+    
     
 
   
