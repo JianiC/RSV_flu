@@ -23,7 +23,10 @@ pomp_objfun <- (
                 params = fit_par ,
                 dmeasure=dmeas_poisson,fail.value = 1e20,
                 statenames = c(model_variables, c("Kprim1","Ksec1","Kprim2","Ksec2","K1", "K2")),
+                ode_control=list(method="ode23"),
                 paramnames = c(model_params))
+  
+  
 )
 
 pomp_objfun(fit_par)

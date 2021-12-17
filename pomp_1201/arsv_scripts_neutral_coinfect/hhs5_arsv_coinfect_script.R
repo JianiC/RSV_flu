@@ -6,9 +6,9 @@ source("./src.R", chdir = TRUE)
 ## specify the virus and HHS region
 
 # make data ready for pomp
-pomp_data_hhs1_brsv <- (
-  inc_data_add %.>% 
-  make_data_pomp_ready(., virus_combo = c("RSV", "fluB"), HHS_region = 1)
+pomp_data_hhs5_arsv <- (
+  inc_data %.>% 
+  make_data_pomp_ready(., virus_combo = c("RSV", "fluA"), HHS_region = 5)
   )
 
 
@@ -19,15 +19,15 @@ if(FALSE) {
   
   pseudo_data <- tibble(time = seq(0, 10, by = 1/52), 
                         total1 = NA, 
-                        total2 = NA, N = pomp_data_hhs1_brsv$N[1])
+                        total2 = NA, N = pomp_data_hhs5_arsv$N[1])
   
   # make a pomp object 
-  hhs1_a_rsv_po <- make_pomp(df = pseudo_data, time_start_sim = -100)
+  hhs5_a_rsv_po <- make_pomp(df = pseudo_data, time_start_sim = -100)
   # inspect the compiled pomp object
-  # spy(hhs1_a_rsv_po)
+  # spy(hhs5_a_rsv_po)
   
 # test if the integratro works as default
-test_traj <- trajectory(object = hhs1_a_rsv_po, format = "d", method = "ode23")
+test_traj <- trajectory(object = hhs5_a_rsv_po, format = "d", method = "ode23")
 
 plot_comp <- (
   test_traj %.>% 
@@ -49,22 +49,22 @@ plot_comp <- (
                phi1=365/30, phi2=365/30, psi =1.0, chi=1.0,
                eta1=365., eta2=365.,rho1 = 0, rho2 = 0,
                amplitude1=0.0, tpeak1=0.0, amplitude2=0.0, tpeak2=0.0,
-               pop=pomp_data_hhs1_brsv$N[1],
+               pop=pomp_data_hhs5_arsv$N[1],
                mu=1/80)
 
-res_hhs1_brsv_chi <- (
-  DE_traj_match(df = pomp_data_hhs1_brsv, 
-                param_constraints = chi_param_constraints, 
+res_hhs5_arsv_coinfect <- (
+  DE_traj_match(df = pomp_data_hhs5_arsv, 
+                param_constraints = co_infect_param_constraints, 
                 params = rp_vals_def,
                 ode_control = list(method = "ode23"), 
-                hypo_name = "chi", 
-                hhs_reg = 1, 
+                hypo_name = "co_infect", 
+                hhs_reg = 5, 
                 tot1_name = "RSV", 
-                tot2_name = "fluB")
+                tot2_name = "fluA")
 )
 
-if(res_hhs1_brsv_chi$total2 == "fluB") message("Code itegration complete!")
+if(res_hhs5_arsv_coinfect$total2 == "fluA") message("Code itegration complete!")
 
-save(res_hhs1_brsv_chi, file = "../res_brsv_chi/res_hhs1_brsv_chi.rds")
+save(res_hhs5_arsv_coinfect, file = "../test_result_coinfect/res_hhs5_arsv_coinfect.rds")
 
 
