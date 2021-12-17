@@ -117,7 +117,7 @@
     geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+
     geom_area(data=inc_data_fit,aes(x=date,y=fluA),fill="gray",alpha=0.4)+
     geom_line(aes(color=hypothesis,linetype=type))+
-    facet_grid(HHSregion~method,scales="free_x",space="free")+
+    facet_grid(HHSregion~method,scales="free",space="free")+
     scale_colour_brewer(palette = "Dark2")+
     theme_bw()+
     xlab("time(weeks)")
