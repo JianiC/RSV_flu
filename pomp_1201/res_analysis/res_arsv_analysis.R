@@ -1,10 +1,7 @@
 
 #Sys.setenv('R_MAX_VSIZE'=64000000000)
 #Sys.getenv('R_MAX_VSIZE')
-source("./setup.R", chdir = TRUE)
-source("./util_funs.R", chdir = TRUE)
-source("./pomp_1204.R", chdir = TRUE)
-source("./fit_functions.R")
+
 #########################################################################################
   res_arsv_coinfect<-list.files(path="pomp_result_1213/res_arsv_coinfect/",pattern=".rds")
   for (i in 1:length(res_arsv_coinfect)){
@@ -18,11 +15,13 @@ source("./fit_functions.R")
     res_hhs7_arsv_coinfect,res_hhs8_arsv_coinfect,res_hhs9_arsv_coinfect,res_hhs10_arsv_coinfect)
   est_res_arsv_coinfect<-get_est_all(res_arsv_coinfect_list)
   
+  traj_fit_arsv_coinfect<-get_traj_fitall(res_arsv_coinfect_list)
   
+## clear large list to release memory  
   rm(res_arsv_coinfect_list,res_hhs1_arsv_coinfect,res_hhs2_arsv_coinfect,res_hhs3_arsv_coinfect,
      res_hhs4_arsv_coinfect,res_hhs5_arsv_coinfect,res_hhs6_arsv_coinfect,
      res_hhs7_arsv_coinfect,res_hhs8_arsv_coinfect,res_hhs9_arsv_coinfect,res_hhs10_arsv_coinfect)
-  ######
+
   
   #########################################################################################  
   
@@ -37,6 +36,7 @@ source("./fit_functions.R")
                               res_hhs4_arsv_neutral,res_hhs5_arsv_neutral,res_hhs6_arsv_neutral,
                               res_hhs7_arsv_neutral,res_hhs8_arsv_neutral,res_hhs9_arsv_neutral,res_hhs10_arsv_neutral)
   est_res_arsv_neutral<-get_est_all(res_arsv_neutral_list)
+  traj_fit_arsv_neutral<-get_traj_fitall(res_arsv_neutral_list)
   
   rm(res_hhs1_arsv_neutral,res_hhs2_arsv_neutral,res_hhs3_arsv_neutral,
      res_hhs4_arsv_neutral,res_hhs5_arsv_neutral,res_hhs6_arsv_neutral,
@@ -55,6 +55,7 @@ source("./fit_functions.R")
                           res_hhs4_arsv_psi,res_hhs5_arsv_psi,res_hhs6_arsv_psi,
                           res_hhs7_arsv_psi,res_hhs8_arsv_psi,res_hhs9_arsv_psi,res_hhs10_arsv_psi)
   est_res_arsv_psi<-get_est_all(res_arsv_psi_list)
+  traj_fit_arsv_psi<-get_traj_fitall(res_arsv_psi_list)
   
   rm(res_hhs1_arsv_psi,res_hhs2_arsv_psi,res_hhs3_arsv_psi,
      res_hhs4_arsv_psi,res_hhs5_arsv_psi,res_hhs6_arsv_psi,
@@ -75,6 +76,8 @@ source("./fit_functions.R")
                           res_hhs4_arsv_chi,res_hhs5_arsv_chi,res_hhs6_arsv_chi,
                           res_hhs7_arsv_chi,res_hhs8_arsv_chi,res_hhs9_arsv_chi,res_hhs10_arsv_chi)
   est_res_arsv_chi<-get_est_all(res_arsv_chi_list)
+  traj_fit_arsv_chi<-get_traj_fitall(res_arsv_chi_list)
+  
   rm(res_hhs1_arsv_chi,res_hhs2_arsv_chi,res_hhs3_arsv_chi,
      res_hhs4_arsv_chi,res_hhs5_arsv_chi,res_hhs6_arsv_chi,
      res_hhs7_arsv_chi,res_hhs8_arsv_chi,res_hhs9_arsv_chi,res_hhs10_arsv_chi,res_arsv_chi_list)
@@ -90,4 +93,21 @@ source("./fit_functions.R")
     theme_bw()+
     theme(legend.position="bottom")+
     scale_colour_brewer(palette = "Dark2")
+  
+  
+## plot trajectory fit
+  traj_fit_arsv<-rbind(traj_fit_arsv_neutral,traj_fit_arsv_psi,traj_fit_arsv_chi,traj_fit_arsv_coinfect)
+  traj_fit_arsv%>%
+    mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
+    ggplot(aes(x=time+2011,y=cases,color=hypothesis,linetype=type))+
+    geom_line()+
+    facet_grid(HHSregion~.)+
+    scale_colour_brewer(palette = "Dark2")+
+    theme_bw()+
+    ylab("time(weeks)")
+    
+
+  
+  
+  
     

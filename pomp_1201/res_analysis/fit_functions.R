@@ -4,7 +4,14 @@ source("./util_funs.R", chdir = TRUE)
 
 
 
-get_rp_vals<-function(data=incdata, virus_combo,HHS_region,res_hhs){
+get_rp_vals<-function(data=incdata,res_hhs){
+  
+  HHS_region=res_hhs$HHS
+  if(res_hhs$total2=="fluA"){
+    virus_combo=c("RSV","fluA")
+  }else{
+    virus_combo=c("RSV","fluB")
+  }
   ## pompdata
   pomp_data_hhs <- (
     inc_data %.>% 
@@ -18,7 +25,19 @@ get_rp_vals<-function(data=incdata, virus_combo,HHS_region,res_hhs){
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
       mutate(phi1=365/30, phi2=365/30,
              psi=1, chi =1)
-  }else{
+  }else if (res_hhs$Hypothesis == "psi"){
+    param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
+    cbind(row.names(.))%>%
+    pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
+    mutate(phi1=365/30, phi2=365/30,
+           chi =1)
+    }else if (res_hhs$Hypothesis == "chi") {
+      param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
+        cbind(row.names(.))%>%
+        pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
+        mutate(phi1=365/30, phi2=365/30,
+               psi =1)
+    }else{
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
@@ -50,7 +69,7 @@ get_rp_vals<-function(data=incdata, virus_combo,HHS_region,res_hhs){
 
 test_traj<-function(data=incdata, virus_combo,HHS_region,res_hhs){
   
-  params=get_rp_vals(data = incdata,virus_combo, HHS_region ,res_hhs)
+  params=get_rp_vals(data = incdata,res_hhs)
   
   ##pomp model
   pomp_data_hhs <- (
@@ -101,7 +120,7 @@ test_traj_pseudo<-function(data=incdata, virus_combo,HHS_region,res_hhs, n=10){
 
 ##get testtraject using param function
 
-traj_fit<-function(data=inc_data,res_hhs){
+traj_fit<-function(data=inc_data_perdic,res_hhs){
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
     virus_combo=c("RSV","fluA")
@@ -109,18 +128,15 @@ traj_fit<-function(data=inc_data,res_hhs){
     virus_combo=c("RSV","fluB")
   }
   
-  params=get_rp_vals(data = inc_data,virus_combo, HHS_region ,res_hhs)
+  params=get_rp_vals(data=inc_data_perdic,virus_combo, HHS_region ,res_hhs)
   
   ##pomp model
   pomp_data_hhs <- (
-    inc_data %.>% 
+    data %.>% 
       make_data_pomp_ready(., virus_combo =virus_combo, HHS_region = HHS_region)
       
   )
   
-  pomp_data_hhs<-pomp_data_hhs%>%
-    add_row(time = 3.008219, total1=NA,total2=NA)%>%
-    arrange(time)
   hhs_po <- make_pomp(df = pomp_data_hhs, time_start_sim = -100)
   
   ## trajectory
@@ -133,7 +149,9 @@ traj_fit<-function(data=inc_data,res_hhs){
            scases2 = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
     select(time, scases1, scases2) %>%
     gather(key = "type", value = "cases", -time)%>%
-    mutate(hypothesis=res_hhs$Hypothesi)->traj_fit 
+    mutate(hypothesis=res_hhs$Hypothesi)%>%
+    mutate(HHSregion=res_hhs$HHS,
+           pathogen2=res_hhs$total2)->traj_fit 
 
    # pomp_data_hhs%>%
    #   mutate(scases1=total1,
@@ -171,7 +189,7 @@ getparam<-function(res_hhs){
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
       mutate(phi1=365/30, phi2=365/30,
-             psi=1)%>%
+             chi=1)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
       mutate(AIC=calculate_aic(loglik,npar=8),
              hyphothesis="psi",
@@ -190,7 +208,8 @@ getparam<-function(res_hhs){
              hyphothesis="chi",
              pathogen1=res_hhs$total1,
              pathogen2=res_hhs$total2,
-             HHSregion=res_hhs$HHS)
+             HHSregion=res_hhs$HHS,
+             )
     
   }else{
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
@@ -211,9 +230,9 @@ getparam<-function(res_hhs){
 }
 
 get_est_all<-function(res_list){
-  df_est=as.data.frame()
+  df_est<-data.frame()
   for( i in 1:length(res_list)){
-    out<-getparam(estlist[[i]])
+    out<-getparam(res_list[[i]])
     df_est=rbind(df_est,out)
     
   }
@@ -221,13 +240,16 @@ get_est_all<-function(res_list){
 }
 
 
+
+
+
 get_traj_fitall<-function(res_list){
   
-  df_traj_fit=as.data.frame()
+  df_traj_fit<-data.frame()
   
   for( i in 1:length(res_list)){
-    out<-traj_fit(estlist[[i]])
-    df_est=rbind(df_est,out)
+    out<-traj_fit(res_hhs=res_list[[i]])
+    df_traj_fit<-rbind(df_traj_fit,out)
     
   }
   return(df_traj_fit)
