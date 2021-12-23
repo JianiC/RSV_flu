@@ -6,9 +6,9 @@ source("./src.R", chdir = TRUE)
 ## specify the virus and HHS region
 
 # make data ready for pomp
-pomp_data_hhs1_arsv <- (
-  inc_data %.>% 
-  make_data_pomp_ready(., virus_combo = c("RSV", "fluA"), HHS_region = 1)
+pomp_data_hhs4_brsv <- (
+inc_data_add %.>%
+  make_data_pomp_ready(., virus_combo = c("RSV", "fluB"), HHS_region = 4)
   )
 
 
@@ -19,7 +19,7 @@ if(FALSE) {
   
   pseudo_data <- tibble(time = seq(0, 10, by = 1/52), 
                         total1 = NA, 
-                        total2 = NA, N = pomp_data_hhs1_arsv$N[1])
+                        total2 = NA, N = pomp_data_hhs1_brsv$N[1])
   
   # make a pomp object 
   hhs1_a_rsv_po <- make_pomp(df = pseudo_data, time_start_sim = -100)
@@ -41,29 +41,30 @@ plot_comp <- (
 }
 
 # loading parameter constraints 
-  # regular parameters for the full model
-  # Npop variable will be updated based on the data  
-  rp_vals <- c(R01 = 1, gamma1=365./9, w1=1,
+
+ # regular parameters for the full model
+  # Npop variable will be updated based on the data
+  rp_vals_def <- c(R01 = 1, gamma1=365./9, w1=1,
                R02 = 1, gamma2=365./3, w2=1,
-               phi1=365/30, phi2=365/30, psi =0.0, chi=0.0, 
-               eta1=365., eta2=365.,rho1 = 0, rho2 = 0, 
-               amplitude1=0.0, tpeak1=0.0, amplitude2=0.0, tpeak2=0.0, 
-               pop=pomp_data_hhs1_arsv$N[1]), 
+               phi1=365/30, phi2=365/30, psi =1, chi=1,
+               eta1=365., eta2=365.,rho1 = 0, rho2 = 0,
+               amplitude1=0.0, tpeak1=0.0, amplitude2=0.0, tpeak2=0.0,
+               pop=pomp_data_hhs4_brsv$N[1],
                mu=1/80)
 
-res <- (
-  DE_traj_match(df = pomp_data_hhs1_arsv, 
-                param_constraints = neutral_param_constraints, 
+res_hhs4_brsv_coinfect <- (
+  DE_traj_match(df = pomp_data_hhs4_brsv, 
+                param_constraints = co_infect_param_constraints, 
                 params = rp_vals_def,
                 ode_control = list(method = "ode23"), 
-                hypo_name = "neutral", 
-                hhs_reg = 1, 
+				hypo_name = "co_infect",
+                hhs_reg = 4, 
                 tot1_name = "RSV", 
-                tot2_name = "fluA")
+                tot2_name = "fluB")
 )
 
-if(res$total2 == "RSV") message("Code itegration complete!")
+if(res_hhs4_brsv_coinfect$total2 == "fluB") message("Code itegration complete!")
 
-save(res, file = "res_hhs1_arsv.Rdata")
+save(res_hhs4_brsv_coinfect, file = "../test_result_coinfect/res_hhs4_brsv_coinfect.rds")
 
 

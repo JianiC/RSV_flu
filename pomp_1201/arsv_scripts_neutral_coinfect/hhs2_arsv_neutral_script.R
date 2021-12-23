@@ -7,7 +7,7 @@ source("./src.R", chdir = TRUE)
 
 # make data ready for pomp
 pomp_data_hhs2_arsv <- (
-  inc_data_add %.>% 
+inc_data_add %.>%
   make_data_pomp_ready(., virus_combo = c("RSV", "fluA"), HHS_region = 2)
   )
 

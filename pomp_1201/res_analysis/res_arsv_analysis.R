@@ -71,7 +71,7 @@
     
   }
   
-  
+  res_hhs2_arsv_chi$Hypothesis="chi"
   res_arsv_chi_list<-list(res_hhs1_arsv_chi,res_hhs2_arsv_chi,res_hhs3_arsv_chi,
                           res_hhs4_arsv_chi,res_hhs5_arsv_chi,res_hhs6_arsv_chi,
                           res_hhs7_arsv_chi,res_hhs8_arsv_chi,res_hhs9_arsv_chi,res_hhs10_arsv_chi)
@@ -87,12 +87,18 @@
  
   est_res_arsv%>%
     mutate(hyphothesis=factor(hyphothesis,levels=hypo_levels))%>%
-    ggplot(aes(x=hyphothesis,y=loglik,color=hyphothesis))+
+    ggplot(aes(x=hyphothesis,y=AIC,color=hyphothesis))+
     geom_point(size=3)+
     facet_wrap(~HHSregion,scales="free_y",nrow = 1)+
     theme_bw()+
     theme(legend.position="bottom")+
-    scale_colour_brewer(palette = "Dark2")
+    #scale_color_discrete(name = "Hypothesis", labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))+
+    scale_colour_brewer(palette = "Dark2",name = "Hypothesis", 
+                        labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))+
+    theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())->arsv_AIC
+  
   
   
 ## plot trajectory fit
@@ -101,28 +107,34 @@
     pivot_wider(names_from = virus, values_from = cases)%>%
     drop_na()%>%
     mutate(method=case_when(
-      time<=6.5 ~ "Fit",
-      time>6.5 ~ "predict"
+      time<=6.5 ~ "Model fit",
+      time>6.5 ~ "Project"
     ))
-
+  
   traj_fit_arsv<-rbind(traj_fit_arsv_neutral,traj_fit_arsv_psi,traj_fit_arsv_chi,traj_fit_arsv_coinfect)
+  traj_fit_arsv_coinfect%>%
+    mutate(hypothesis="co_infect")
+  hypo_levels=c("neutral","psi","chi","co_infect")
+  patho_order<-c("RSV","fluA")
   traj_fit_arsv%>%
     mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
+    mutate(pathogen=factor(type,levels=patho_order))%>%
     mutate(method=case_when(
-      time<=6.5 ~ "Fit",
-      time>6.5 ~ "predict"
+      time<=6.5 ~ "Model fit",
+      time>6.5 ~ "Project"
     ))%>%
     ggplot(aes(x=time+2011,y=cases))+
-    
     geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+
-    geom_area(data=inc_data_fit,aes(x=date,y=fluA),fill="gray",alpha=0.4)+
-    geom_line(aes(color=hypothesis,linetype=type))+
-    facet_grid(HHSregion~method,scales="free",space="free")+
-    scale_colour_brewer(palette = "Dark2")+
+    geom_area(data=inc_data_fit,aes(x=date,y=fluA),fill="gray",alpha=0.6)+
+    geom_line(aes(color=hypothesis,linetype=pathogen),size=0.5)+
+    facet_grid(HHSregion~method,scales="free_x",space="free")+
+
     theme_bw()+
-    xlab("time(weeks)")
-    
-    
+    xlab("time(weeks)")+
+    scale_colour_brewer(palette = "Dark2",name = "Hypothesis", 
+                        labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))->arsv_trajfit
+#+
+ #   theme(legend.position="bottom"
     
 
   

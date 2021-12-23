@@ -7,7 +7,7 @@ source("./src.R", chdir = TRUE)
 
 # make data ready for pomp
 pomp_data_hhs6_brsv <- (
-  inc_data %.>% 
+inc_data_add %.>%
   make_data_pomp_ready(., virus_combo = c("RSV", "fluB"), HHS_region = 6)
   )
 
@@ -65,6 +65,6 @@ res_hhs6_brsv_psi <- (
 
 if(res_hhs6_brsv_psi$total2 == "fluB") message("Code itegration complete!")
 
-save(res_hhs6_brsv_psi, file = "../res_brsv_psi/res_hhs6_brsv_psi.rds")
+save(res_hhs6_brsv_psi, file = "../res_brsv_psi/res_hhs6_brsv_psi2.rds")
 
 

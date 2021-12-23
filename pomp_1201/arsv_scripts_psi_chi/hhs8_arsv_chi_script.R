@@ -7,7 +7,7 @@ source("./src.R", chdir = TRUE)
 
 # make data ready for pomp
 pomp_data_hhs8_arsv <- (
-  inc_data %.>% 
+inc_data_add %.>%
   make_data_pomp_ready(., virus_combo = c("RSV", "fluA"), HHS_region = 8)
   )
 
@@ -52,19 +52,19 @@ plot_comp <- (
                pop=pomp_data_hhs8_arsv$N[1],
                mu=1/80)
 
-res_hhs8_arsv_coinfect <- (
+res_hhs8_arsv_chi <- (
   DE_traj_match(df = pomp_data_hhs8_arsv, 
-                param_constraints = co_infect_param_constraints, 
+                param_constraints = chi_param_constraints, 
                 params = rp_vals_def,
                 ode_control = list(method = "ode23"), 
-                hypo_name = "co_infect", 
+                hypo_name = "chi", 
                 hhs_reg = 8, 
                 tot1_name = "RSV", 
                 tot2_name = "fluA")
 )
 
-if(res_hhs8_arsv_coinfect$total2 == "fluA") message("Code itegration complete!")
+if(res_hhs8_arsv_chi$total2 == "fluA") message("Code itegration complete!")
 
-save(res_hhs8_arsv_coinfect, file = "../test_result_coinfect/res_hhs8_arsv_coinfect.rds")
+save(res_hhs8_arsv_chi, file = "../test_result_chi/res_hhs8_arsv_chi.rds")
 
 

@@ -4,7 +4,7 @@ source("./util_funs.R", chdir = TRUE)
 
 
 
-get_rp_vals<-function(data=incdata,res_hhs){
+get_rp_vals<-function(data=incdata_add,res_hhs){
   
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
@@ -128,7 +128,7 @@ traj_fit<-function(data=inc_data_perdic,res_hhs){
     virus_combo=c("RSV","fluB")
   }
   
-  params=get_rp_vals(data=inc_data_perdic,virus_combo, HHS_region ,res_hhs)
+  params=get_rp_vals(data=inc_data_perdic,res_hhs)
   
   ##pomp model
   pomp_data_hhs <- (
@@ -141,17 +141,35 @@ traj_fit<-function(data=inc_data_perdic,res_hhs){
   
   ## trajectory
   test_traj <- trajectory(object = hhs_po, params=params, format = "d", method = "ode23")
-  test_traj %>% 
-    slice(., 2:n()) %>% 
-    #select(., -`.id`) %.>% 
-    select(time, K1, K2) %>%
-    mutate(scases1 = res_hhs$DEobj$optim$bestmem["rho1"]*K1, 
-           scases2 = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
-    select(time, scases1, scases2) %>%
-    gather(key = "type", value = "cases", -time)%>%
-    mutate(hypothesis=res_hhs$Hypothesi)%>%
-    mutate(HHSregion=res_hhs$HHS,
-           pathogen2=res_hhs$total2)->traj_fit 
+  if(res_hhs$total2=="fluA"){
+    test_traj %>% 
+      slice(., 2:n()) %>% 
+      #select(., -`.id`) %.>% 
+      select(time, K1, K2) %>%
+      mutate(RSV = res_hhs$DEobj$optim$bestmem["rho1"]*K1, 
+             fluA = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
+      select(time, RSV, fluA) %>%
+      gather(key = "type", value = "cases", -time)%>%
+      mutate(hypothesis=res_hhs$Hypothesi)%>%
+      mutate(HHSregion=res_hhs$HHS,
+             pathogen2=res_hhs$total2)->traj_fit 
+    
+  }else{
+    test_traj %>% 
+      slice(., 2:n()) %>% 
+      #select(., -`.id`) %.>% 
+      select(time, K1, K2) %>%
+      mutate(RSV = res_hhs$DEobj$optim$bestmem["rho1"]*K1, 
+             fluB = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
+      select(time, RSV, fluB) %>%
+      gather(key = "type", value = "cases", -time)%>%
+      mutate(hypothesis=res_hhs$Hypothesi)%>%
+      mutate(HHSregion=res_hhs$HHS,
+             pathogen2=res_hhs$total2)->traj_fit 
+    
+  }
+  
+  
 
    # pomp_data_hhs%>%
    #   mutate(scases1=total1,
