@@ -5,13 +5,14 @@ packages <- c("tidyverse", "stringr",
               "LaplacesDemon", 
               "rootSolve",
               "DEoptim", "doParallel", "doRNG", 
-              "parallel")
+              "parallel", "caret")
 
 
 lapply(packages, library, character.only = TRUE)
 
 # load the requisite data 
-load("./inc_data.rds")
+load("./inc_data_perdic.rds")
+load("./inc_data_add.rds")
 
 # set up controls for deoptim
 ### controls list for DEoptim - for MLE estimation

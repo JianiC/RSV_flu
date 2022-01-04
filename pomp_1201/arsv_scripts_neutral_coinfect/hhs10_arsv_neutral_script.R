@@ -7,7 +7,11 @@ source("./src.R", chdir = TRUE)
 
 # make data ready for pomp
 pomp_data_hhs10_arsv <- (
+<<<<<<< HEAD
 inc_data_add %.>%
+=======
+  inc_data %.>% 
+>>>>>>> main
   make_data_pomp_ready(., virus_combo = c("RSV", "fluA"), HHS_region = 10)
   )
 

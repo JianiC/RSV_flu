@@ -7,7 +7,11 @@ source("./src.R", chdir = TRUE)
 
 # make data ready for pomp
 pomp_data_hhs4_arsv <- (
+<<<<<<< HEAD
 inc_data_add %.>%
+=======
+  inc_data %.>% 
+>>>>>>> main
   make_data_pomp_ready(., virus_combo = c("RSV", "fluA"), HHS_region = 4)
   )
 
@@ -57,7 +61,11 @@ res_hhs4_arsv_coinfect <- (
                 param_constraints = co_infect_param_constraints, 
                 params = rp_vals_def,
                 ode_control = list(method = "ode23"), 
+<<<<<<< HEAD
                 hypo_name = "co_infect", 
+=======
+                hypo_name = "co-infect", 
+>>>>>>> main
                 hhs_reg = 4, 
                 tot1_name = "RSV", 
                 tot2_name = "fluA")

@@ -1,3 +1,8 @@
+
+source("./fit_functions.R", chdir = TRUE) 
+
+
+
 res_brsv_coinfect<-list.files(path="pomp_result_1213/res_brsv_coinfect/",pattern=".rds")
 for (i in 1:length(res_brsv_coinfect)){
    load(paste("pomp_result_1213/res_brsv_coinfect/",res_brsv_coinfect[i],sep=""))
@@ -9,6 +14,10 @@ res_brsv_coinfect_list<-list(
    res_hhs4_brsv_coinfect,res_hhs5_brsv_coinfect,res_hhs6_brsv_coinfect,
    res_hhs7_brsv_coinfect,res_hhs8_brsv_coinfect,res_hhs9_brsv_coinfect,res_hhs10_brsv_coinfect)
 est_res_brsv_coinfect<-get_est_all(res_brsv_coinfect_list)
+get_fitmeasure_all(res_brsv_coinfect_list)%>%
+   full_join(est_res_brsv_coinfect,
+             by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_coinfect
+
 
 traj_fit_brsv_coinfect<-get_traj_fitall(res_brsv_coinfect_list)
 
@@ -31,6 +40,10 @@ res_brsv_neutral_list<-list(res_hhs1_brsv_neutral,res_hhs2_brsv_neutral,res_hhs3
                             res_hhs4_brsv_neutral,res_hhs5_brsv_neutral,res_hhs6_brsv_neutral,
                             res_hhs7_brsv_neutral,res_hhs8_brsv_neutral,res_hhs9_brsv_neutral,res_hhs10_brsv_neutral)
 est_res_brsv_neutral<-get_est_all(res_brsv_neutral_list)
+
+get_fitmeasure_all(res_brsv_neutral_list)%>%
+   full_join(est_res_brsv_neutral,
+             by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_neutral
 traj_fit_brsv_neutral<-get_traj_fitall(res_brsv_neutral_list)
 
 rm(res_hhs1_brsv_neutral,res_hhs2_brsv_neutral,res_hhs3_brsv_neutral,
@@ -50,6 +63,10 @@ res_brsv_psi_list<-list(res_hhs1_brsv_psi,res_hhs2_brsv_psi,res_hhs3_brsv_psi,
                         res_hhs4_brsv_psi,res_hhs5_brsv_psi,res_hhs6_brsv_psi,
                         res_hhs7_brsv_psi,res_hhs8_brsv_psi,res_hhs9_brsv_psi,res_hhs10_brsv_psi)
 est_res_brsv_psi<-get_est_all(res_brsv_psi_list)
+get_fitmeasure_all(res_brsv_psi_list)%>%
+   full_join(est_res_brsv_psi,
+             by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_psi
+
 traj_fit_brsv_psi<-get_traj_fitall(res_brsv_psi_list)
 
 rm(res_hhs1_brsv_psi,res_hhs2_brsv_psi,res_hhs3_brsv_psi,
@@ -69,8 +86,12 @@ for (i in 1:length(res_brsv_chi)){
 
 res_brsv_chi_list<-list(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
                         res_hhs4_brsv_chi,res_hhs5_brsv_chi,res_hhs6_brsv_chi,
+                        res_hhs4_brsv_chi,res_hhs6_brsv_chi,
                         res_hhs7_brsv_chi,res_hhs8_brsv_chi,res_hhs9_brsv_chi,res_hhs10_brsv_chi)
 est_res_brsv_chi<-get_est_all(res_brsv_chi_list)
+get_fitmeasure_all(res_brsv_chi_list)%>%
+   full_join(est_res_brsv_chi,
+             by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_chi
 traj_fit_brsv_chi<-get_traj_fitall(res_brsv_chi_list)
 
 rm(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
@@ -78,15 +99,27 @@ rm(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
    res_hhs7_brsv_chi,res_hhs8_brsv_chi,res_hhs9_brsv_chi,res_hhs10_brsv_chi,res_brsv_chi_list)
 #########################################################################################   
 est_res_brsv<-rbind(est_res_brsv_neutral,est_res_brsv_psi,est_res_brsv_chi,est_res_brsv_coinfect)
+
+
+
+
+
+
+
 hypo_levels=c("neutral","psi","chi","co-infect")
 
 est_res_brsv%>%
    mutate(hyphothesis=factor(hyphothesis,levels=hypo_levels))%>%
+
    ggplot(aes(x=hyphothesis,y=AIC,color=hyphothesis))+
+
+  # ggplot(aes(x=hyphothesis,y=loglik,color=hyphothesis))+
+
    geom_point(size=3)+
    facet_wrap(~HHSregion,scales="free_y",nrow = 1)+
    theme_bw()+
    theme(legend.position="bottom")+
+
    scale_colour_brewer(palette = "Dark2")+
    scale_linetype_manual(values=c("solid", "dotted"))+
    theme(legend.position="bottom")+
@@ -96,6 +129,9 @@ est_res_brsv%>%
    theme(axis.title.x=element_blank(),
          axis.text.x=element_blank(),
          axis.ticks.x=element_blank())->brsv_AIC
+
+
+ 
 
 
 
@@ -110,6 +146,7 @@ inc_data_fit<-inc_data_perdic%>%
    ))
 
 traj_fit_brsv<-rbind(traj_fit_brsv_neutral,traj_fit_brsv_coinfect,traj_fit_brsv_psi,traj_fit_brsv_chi)
+
 traj_fit_brsv_coinfect%>%
    mutate(hypothesis="co_infect")
 hypo_levels=c("neutral","psi","chi","co_infect")
@@ -171,6 +208,27 @@ inc_data_fit<-inc_data_perdic%>%
    
    
    
+
+
+
+
+   traj_fit_brsv%>%
+      filter(HHSregion!=1 | hypothesis!="chi")%>%
+      filter(HHSregion!=6 | hypothesis!="psi")%>%
+      filter(HHSregion!=6 | hypothesis!="chi")%>%
+      filter(HHSregion!=7 | hypothesis!="chi")%>%
+      filter(HHSregion!=7 | hypothesis!="neutral")%>%
+      #filter(HHSregion!=6)%>%
+      #filter(HHSregion!=7)%>%
+      ggplot(aes(x=time+2011,y=cases))+
+      geom_line(aes(color=hypothesis,linetype=type))+
+      
+      geom_area(data=inc_data_fit,aes(x=date,y=fluB),fill="gray",alpha=0.4)+
+      geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+
+      facet_grid(HHSregion~.)+
+      scale_colour_brewer(palette = "Dark2")+
+      theme_bw()
+
 load("pomp_result_1213/res_brsv_neutral/res_hhs7_brsv_neutral.rds")
 test_traj(res_hhs=res_hhs7_brsv_neutral)%>%
    slice( 2:n()) %>% 

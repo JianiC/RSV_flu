@@ -129,7 +129,7 @@ DE_traj_match <- function(param_constraints,
 
 
 # this function prepares incidence data for pomp
-make_data_pomp_ready <- function(data = inc_data, virus_combo = c("RSV", "fluA"), HHS_region = 1) {
+make_data_pomp_ready <- function(data = inc_data_add, virus_combo = c("RSV", "fluA"), HHS_region = 1) {
   #browser()
   data %.>% 
     filter(., HHS_REGION == HHS_region & virus %in% virus_combo) %.>% 

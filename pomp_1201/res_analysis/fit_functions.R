@@ -1,10 +1,10 @@
 ## function to get estimated param values
 source("./setup.R", chdir = TRUE)
 source("./util_funs.R", chdir = TRUE)
+source("./pomp_1204.R", chdir = TRUE)
 
 
-
-get_rp_vals<-function(data=incdata_add,res_hhs){
+get_rp_vals<-function(data=inc_data_add,res_hhs){
   
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
@@ -14,7 +14,7 @@ get_rp_vals<-function(data=incdata_add,res_hhs){
   }
   ## pompdata
   pomp_data_hhs <- (
-    inc_data %.>% 
+    inc_data_add %.>% 
       make_data_pomp_ready(., virus_combo =virus_combo, HHS_region = HHS_region)
   )
   
@@ -67,16 +67,23 @@ get_rp_vals<-function(data=incdata_add,res_hhs){
 
 ##get testtraject using param function
 
-test_traj<-function(data=incdata, virus_combo,HHS_region,res_hhs){
+test_traj<-function(data=inc_data_add,res_hhs){
   
-  params=get_rp_vals(data = incdata,res_hhs)
+  HHS_region=res_hhs$HHS
+  if(res_hhs$total2=="fluA"){
+    virus_combo=c("RSV","fluA")
+  }else{
+    virus_combo=c("RSV","fluB")
+  }
+  
+  params=get_rp_vals(data=inc_data_add,res_hhs)
   
   ##pomp model
   pomp_data_hhs <- (
-    inc_data %.>% 
+    data%.>% 
       make_data_pomp_ready(., virus_combo =virus_combo, HHS_region = HHS_region)
   )
-  pomp_data_hhs<-pomp_data_hhs%>%drop_na()
+  #pomp_data_hhs<-pomp_data_hhs%>%drop_na()
   hhs_po <- make_pomp(df = pomp_data_hhs, time_start_sim = -100)
   
   ## trajectory
@@ -90,13 +97,20 @@ test_traj<-function(data=incdata, virus_combo,HHS_region,res_hhs){
 
 
 
-test_traj_pseudo<-function(data=incdata, virus_combo,HHS_region,res_hhs, n=10){
+test_traj_pseudo<-function(data=inc_data_add,res_hhs, n=6.5){
   
-  params=get_rp_vals(data = incdata,virus_combo, HHS_region ,res_hhs)
+  HHS_region=res_hhs$HHS
+  if(res_hhs$total2=="fluA"){
+    virus_combo=c("RSV","fluA")
+  }else{
+    virus_combo=c("RSV","fluB")
+  }
+  
+  params=get_rp_vals(data = inc_data_add,res_hhs)
   
   ##pomp model
   pomp_data_hhs <- (
-    inc_data %.>% 
+    inc_data_add %.>% 
       make_data_pomp_ready(., virus_combo =virus_combo, HHS_region = HHS_region)
   )
   
@@ -236,7 +250,7 @@ getparam<-function(res_hhs){
       mutate(phi1=365/30, phi2=365/30)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
       mutate(AIC=calculate_aic(loglik,npar=10),
-             hyphothesis="co-infect",
+             hyphothesis="co_infect",
              pathogen1=res_hhs$total1,
              pathogen2=res_hhs$total2,
              HHSregion=res_hhs$HHS)
@@ -273,4 +287,29 @@ get_traj_fitall<-function(res_list){
   return(df_traj_fit)
 }
 
-
+## calculate R2 and RMSE from POMP results to evaluate model fit
+modelfit_meas<-function(data = inc_data_add,res_hhs){
+  traj_fit(data, res_hhs)%>%
+    inner_join(data, by = c("time" = "time", "type"="virus"))%>%
+    drop_na()-> traj_fit_withdata
+  
+  data.frame(
+    R2 = R2(traj_fit_withdata$cases.x,traj_fit_withdata$cases.y),
+    RMSE = RMSE(traj_fit_withdata$cases.x,traj_fit_withdata$cases.y),
+    HHSregion = traj_fit_withdata$HHSregion[1],
+    Hypothesis = traj_fit_withdata$hypothesis[1],
+    Pathogen2 = traj_fit_withdata$pathogen2[1]) -> model_fit_measure
+  
+  return(model_fit_measure)
+  
+}
+## loop through all HHS region
+get_fitmeasure_all<-function(res_list){
+  df_est<-data.frame()
+  for( i in 1:length(res_list)){
+    out<-modelfit_meas(res_hhs = res_list[[i]])
+    df_est=rbind(df_est,out)
+    
+  }
+  return(df_est)
+}
