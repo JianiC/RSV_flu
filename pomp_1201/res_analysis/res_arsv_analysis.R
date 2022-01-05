@@ -1,6 +1,9 @@
 
 #Sys.setenv('R_MAX_VSIZE'=64000000000)
 #Sys.getenv('R_MAX_VSIZE')
+Sys.setenv('R_MAX_NUM_DLL'=4800)
+Sys.getenv('R_MAX_NUM_DLL')
+system("ulimit -n 4000")
 # first load prerequisites
 source("./fit_functions.R", chdir = TRUE) 
 #########################################################################################
@@ -101,12 +104,12 @@ source("./fit_functions.R", chdir = TRUE)
   #########################################################################################   
   est_res_arsv<-rbind(est_res_arsv_neutral,est_res_arsv_psi,est_res_arsv_chi,est_res_arsv_coinfect)
   
-  rbind(result_res_arsv_neutral,result_res_arsv_psi,result_res_arsv_chi,result_res_arsv_coinfect)%>%
+  rbind(result_res_brsv_neutral,result_res_brsv_psi,result_res_brsv_chi,result_res_brsv_coinfect)%>%
     select("Pathogen2","HHSregion","Hypothesis",
            "R01","R02","amplitude1","amplitude2","tpeak1","tpeak2","rho1","rho2", "psi","chi",
-           "loglik","AIC","R2","RMSE" )-> result_res_arsv
+           "loglik","AIC","R2","RMSE" )-> result_res_brsv
   
-  write.csv(result_res_arsv,"./figures/result_res_arsv.csv",row.names = FALSE)
+  write.csv(result_res_brsv,"./figures/result_res_brsv.csv",row.names = FALSE)
   
   hypo_levels=c("neutral","psi","chi","co-infect")
  

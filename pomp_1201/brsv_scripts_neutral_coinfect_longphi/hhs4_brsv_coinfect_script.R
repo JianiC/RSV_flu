@@ -65,6 +65,6 @@ res_hhs4_brsv_coinfect <- (
 
 if(res_hhs4_brsv_coinfect$total2 == "fluB") message("Code itegration complete!")
 
-save(res_hhs4_brsv_coinfect, file = "../test_result_coinfect/res_hhs4_brsv_coinfect.rds")
+save(res_hhs4_brsv_coinfect, file = "../testb_result_coinfect/res_hhs4_brsv_coinfect.rds")
 
 
