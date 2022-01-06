@@ -1,9 +1,9 @@
 
 #Sys.setenv('R_MAX_VSIZE'=64000000000)
 #Sys.getenv('R_MAX_VSIZE')
-Sys.setenv('R_MAX_NUM_DLL'=4800)
+Sys.setenv('R_MAX_NUM_DLL'=1000)
 Sys.getenv('R_MAX_NUM_DLL')
-system("ulimit -n 4000")
+system("ulimit -n 1000")
 # first load prerequisites
 source("./fit_functions.R", chdir = TRUE) 
 #########################################################################################

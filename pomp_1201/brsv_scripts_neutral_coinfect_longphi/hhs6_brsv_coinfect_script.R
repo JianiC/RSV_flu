@@ -44,9 +44,9 @@ plot_comp <- (
 
  # regular parameters for the full model
   # Npop variable will be updated based on the data
-  rp_vals_def <- c(R01 = 1, gamma1=365./9, w1=1,
-               R02 = 1, gamma2=365./3, w2=1,
-               phi1=365/90, phi2=365/90, psi =1.0, chi=1.0,
+  rp_vals_def <- c(R01 = 1, gamma1=365./9, w1=2,
+               R02 = 1, gamma2=365./3, w2=2,
+               phi1=365/180, phi2=365/180, psi =1.0, chi=1.0,
                eta1=365., eta2=365.,rho1 = 0, rho2 = 0,
                amplitude1=0.0, tpeak1=0.0, amplitude2=0.0, tpeak2=0.0,
                pop=pomp_data_hhs6_brsv$N[1],

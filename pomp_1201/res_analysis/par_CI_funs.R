@@ -100,3 +100,20 @@ CI_loglik_psi<-function(loglik_p){
   
 }
 
+CI_loglik_chi<-function(loglik_p){
+  
+  maxloglik <- max(loglik_p$loglik)
+  cutoff <- maxloglik-qchisq(p=0.95,df=1)/2
+  lower <-range(subset(loglik_p,loglik>cutoff)$chi)[1]
+  upper <-range(subset(loglik_p,loglik>cutoff)$chi)[2]
+  
+  loglik_p%>% mutate(loglik_cutoff=cutoff,
+                     maxloglik=maxloglik,
+                     lower=lower,
+                     upper=upper)->CI_parm
+  
+  return(CI_parm)
+  
+  
+}
+

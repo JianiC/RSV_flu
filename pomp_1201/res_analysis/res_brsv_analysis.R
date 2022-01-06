@@ -2,16 +2,16 @@
 source("./fit_functions.R", chdir = TRUE) 
 
 
-
-res_brsv_coinfect<-list.files(path="pomp_result_1213/res_brsv_coinfect/",pattern=".rds")
+res_hhs1_brsv_coinfect$DEobj$optim$bestval
+res_brsv_coinfect<-list.files(path="pomp_result_1213/testb_result_coinfect/",pattern=".rds")
 for (i in 1:length(res_brsv_coinfect)){
-   load(paste("pomp_result_1213/res_brsv_coinfect/",res_brsv_coinfect[i],sep=""))
+   load(paste("pomp_result_1213/testb_result_coinfect/",res_brsv_coinfect[i],sep=""))
    print(paste0("load ",res_brsv_coinfect[i]))
 }
 
 res_brsv_coinfect_list<-list(
    res_hhs1_brsv_coinfect,res_hhs2_brsv_coinfect,res_hhs3_brsv_coinfect,
-   res_hhs4_brsv_coinfect,res_hhs5_brsv_coinfect,res_hhs6_brsv_coinfect,
+   res_hhs5_brsv_coinfect,res_hhs6_brsv_coinfect,
    res_hhs7_brsv_coinfect,res_hhs8_brsv_coinfect,res_hhs9_brsv_coinfect,res_hhs10_brsv_coinfect)
 est_res_brsv_coinfect<-get_est_all(res_brsv_coinfect_list)
 get_fitmeasure_all(res_brsv_coinfect_list)%>%
@@ -30,9 +30,9 @@ rm(res_brsv_coinfect_list,res_hhs1_brsv_coinfect,res_hhs2_brsv_coinfect,res_hhs3
 #########################################################################################  
 
 
-res_brsv_neutral<-list.files(path="pomp_result_1213/res_brsv_neutral/",pattern=".rds")
+res_brsv_neutral<-list.files(path="pomp_result_1213/testb_result_neutral/",pattern=".rds")
 for (i in 1:length(res_brsv_neutral)){
-   load(paste("pomp_result_1213/res_brsv_neutral/",res_brsv_neutral[i],sep=""))
+   load(paste("pomp_result_1213/testb_result_neutral/",res_brsv_neutral[i],sep=""))
    print(paste0("load ",res_brsv_neutral[i]))
 }
 

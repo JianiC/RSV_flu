@@ -23,29 +23,29 @@ get_rp_vals<-function(data=inc_data_add,res_hhs){
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-      mutate(phi1=365/30, phi2=365/30,
+      mutate(phi1=365/180, phi2=365/180,
              psi=1, chi =1)
   }else if (res_hhs$Hypothesis == "psi"){
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
     cbind(row.names(.))%>%
     pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-    mutate(phi1=365/30, phi2=365/30,
+    mutate(phi1=365/180, phi2=365/180,
            chi =1)
     }else if (res_hhs$Hypothesis == "chi") {
       param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
         cbind(row.names(.))%>%
-        pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-        mutate(phi1=365/30, phi2=365/30,
+        pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$brsvoptim$bestmem`)%>%
+        mutate(phi1=365/180, phi2=365/180,
                psi =1)
     }else{
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-      mutate(phi1=365/30, phi2=365/30)
+      mutate(phi1=365/180, phi2=365/180)
     
   }
-  rp_vals <- c(R01=param_vector$R01, gamma1=365./9, w1=1/1,
-               R02=param_vector$R02, gamma2=365./3, w2=1/1,
+  rp_vals <- c(R01=param_vector$R01, gamma1=365./9, w1=2,
+               R02=param_vector$R02, gamma2=365./3, w2=2,
                amplitude1 = param_vector$amplitude1,
                amplitude2 = param_vector$amplitude2,
                tpeak1 = param_vector$tpeak1,
@@ -207,7 +207,7 @@ getparam<-function(res_hhs){
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-      mutate(phi1=365/30, phi2=365/30,
+      mutate(phi1=365/180, phi2=365/180,
              psi=1, chi =1)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
       mutate(AIC=calculate_aic(loglik,npar=8),
@@ -220,7 +220,7 @@ getparam<-function(res_hhs){
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-      mutate(phi1=365/30, phi2=365/30,
+      mutate(phi1=365/180, phi2=365/180,
              chi=1)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
       mutate(AIC=calculate_aic(loglik,npar=8),
@@ -233,7 +233,7 @@ getparam<-function(res_hhs){
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-      mutate(phi1=365/30, phi2=365/30,
+      mutate(phi1=365/180, phi2=365/180,
              psi=1)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
       mutate(AIC=calculate_aic(loglik,npar=8),
@@ -247,7 +247,7 @@ getparam<-function(res_hhs){
     param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
       cbind(row.names(.))%>%
       pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
-      mutate(phi1=365/30, phi2=365/30)%>%
+      mutate(phi1=365/180, phi2=365/180)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
       mutate(AIC=calculate_aic(loglik,npar=10),
              hyphothesis="co_infect",
