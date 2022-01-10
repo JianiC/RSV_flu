@@ -5,7 +5,7 @@ packages <- c("tidyverse", "stringr",
               "LaplacesDemon", 
               "rootSolve",
               "DEoptim", "doParallel", "doRNG", 
-              "parallel", "caret")
+              "parallel", "caret","reshape2")
 
 
 lapply(packages, library, character.only = TRUE)

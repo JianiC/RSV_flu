@@ -65,6 +65,6 @@ res_hhs8_arsv_chi <- (
 
 if(res_hhs8_arsv_chi$total2 == "fluA") message("Code itegration complete!")
 
-save(res_hhs8_arsv_chi, file = "../test_result_chi/res_hhs8_arsv_chi.rds")
+save(res_hhs8_arsv_chi, file = "../res_arsv_chi/res_hhs8_arsv_chi.rds")
 
 

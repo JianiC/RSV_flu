@@ -34,7 +34,7 @@ get_rp_vals<-function(data=inc_data_add,res_hhs){
     }else if (res_hhs$Hypothesis == "chi") {
       param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
         cbind(row.names(.))%>%
-        pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$brsvoptim$bestmem`)%>%
+        pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)%>%
         mutate(phi1=365/180, phi2=365/180,
                psi =1)
     }else{

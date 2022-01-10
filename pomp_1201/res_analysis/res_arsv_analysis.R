@@ -7,9 +7,9 @@ system("ulimit -n 1000")
 # first load prerequisites
 source("./fit_functions.R", chdir = TRUE) 
 #########################################################################################
-  res_arsv_coinfect<-list.files(path="pomp_result_1213/res_arsv_coinfect/",pattern=".rds")
+  res_arsv_coinfect<-list.files(path="pomp_longphi_result/res_arsv_coinfect/",pattern=".rds")
   for (i in 1:length(res_arsv_coinfect)){
-    load(paste("pomp_result_1213/res_arsv_coinfect/",res_arsv_coinfect[i],sep=""))
+    load(paste("pomp_longphi_result/res_arsv_coinfect/",res_arsv_coinfect[i],sep=""))
     print(paste0("load ",res_arsv_coinfect[i]))
   }
   
@@ -34,9 +34,9 @@ source("./fit_functions.R", chdir = TRUE)
   #########################################################################################  
   
   
-  res_arsv_neutral<-list.files(path="pomp_result_1213/res_arsv_neutral/",pattern=".rds")
+  res_arsv_neutral<-list.files(path="pomp_longphi_result/res_arsv_neutral/",pattern=".rds")
   for (i in 1:length(res_arsv_neutral)){
-    load(paste("pomp_result_1213/res_arsv_neutral/",res_arsv_neutral[i],sep=""))
+    load(paste("pomp_longphi_result/res_arsv_neutral/",res_arsv_neutral[i],sep=""))
     print(paste0("load ",res_arsv_neutral[i]))
   }
   
@@ -58,9 +58,9 @@ source("./fit_functions.R", chdir = TRUE)
   
   #########################################################################################   
   
-  res_arsv_psi<-list.files(path="pomp_result_1213/res_arsv_psi/",pattern=".rds")
+  res_arsv_psi<-list.files(path="pomp_longphi_result/res_arsv_psi/",pattern=".rds")
   for (i in 1:length(res_arsv_psi)){
-    load(paste("pomp_result_1213/res_arsv_psi/",res_arsv_psi[i],sep=""))
+    load(paste("pomp_longphi_result/res_arsv_psi/",res_arsv_psi[i],sep=""))
     print(paste0("load ",res_arsv_psi[i]))
   }
   
@@ -81,9 +81,9 @@ source("./fit_functions.R", chdir = TRUE)
   #########################################################################################   
   
   
-  res_arsv_chi<-list.files(path="pomp_result_1213/res_arsv_chi/",pattern=".rds")
+  res_arsv_chi<-list.files(path="pomp_longphi_result/res_arsv_chi/",pattern=".rds")
   for (i in 1:length(res_arsv_chi)){
-    load(paste("pomp_result_1213/res_arsv_chi/",res_arsv_chi[i],sep=""))
+    load(paste("pomp_longphi_result/res_arsv_chi/",res_arsv_chi[i],sep=""))
     print(paste0("load ",res_arsv_chi[i]))
     
   }
@@ -104,14 +104,19 @@ source("./fit_functions.R", chdir = TRUE)
   #########################################################################################   
   est_res_arsv<-rbind(est_res_arsv_neutral,est_res_arsv_psi,est_res_arsv_chi,est_res_arsv_coinfect)
   
-  rbind(result_res_brsv_neutral,result_res_brsv_psi,result_res_brsv_chi,result_res_brsv_coinfect)%>%
+  rbind(result_res_arsv_neutral,result_res_arsv_psi,result_res_arsv_chi,result_res_arsv_coinfect)%>%
     select("Pathogen2","HHSregion","Hypothesis",
            "R01","R02","amplitude1","amplitude2","tpeak1","tpeak2","rho1","rho2", "psi","chi",
-           "loglik","AIC","R2","RMSE" )-> result_res_brsv
+           "loglik","AIC","R2","RMSE" )%>%
+    mutate(psi=1-psi,
+           chi=1-chi)%>%
+    melt(id.vars=c("Pathogen2","HHSregion","Hypothesis"))%>%
+    dcast(Pathogen2 + HHSregion+variable~ Hypothesis)%>%
+    select(Pathogen2, HHSregion, variable, neutral,psi,chi,co_infect) -> result_res_arsv
   
-  write.csv(result_res_brsv,"./figures/result_res_brsv.csv",row.names = FALSE)
+  write.csv(result_res_arsv,"./figures/result_res_arsv_longphhi.csv",row.names = FALSE)
   
-  hypo_levels=c("neutral","psi","chi","co-infect")
+  hypo_levels=c("neutral","psi","chi","co_infect")
  
   est_res_arsv%>%
     mutate(hyphothesis=factor(hyphothesis,levels=hypo_levels))%>%
@@ -135,8 +140,8 @@ source("./fit_functions.R", chdir = TRUE)
     pivot_wider(names_from = virus, values_from = cases)%>%
     drop_na()%>%
     mutate(method=case_when(
-      time<=6.5 ~ "Model fit",
-      time>6.5 ~ "Project"
+      time<=6.5 ~ "Model fitting",
+      time>6.5 ~ "Prediction"
     ))
   
   traj_fit_arsv<-rbind(traj_fit_arsv_neutral,traj_fit_arsv_psi,traj_fit_arsv_chi,traj_fit_arsv_coinfect)
@@ -148,8 +153,8 @@ source("./fit_functions.R", chdir = TRUE)
     mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
     mutate(pathogen=factor(type,levels=patho_order))%>%
     mutate(method=case_when(
-      time<=6.5 ~ "Model fit",
-      time>6.5 ~ "Project"
+      time<=6.5 ~ "Model fitting",
+      time>6.5 ~ "Prediction"
     ))%>%
     ggplot(aes(x=time+2011,y=cases))+
     geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+

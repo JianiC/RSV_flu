@@ -3,14 +3,14 @@ source("./fit_functions.R", chdir = TRUE)
 
 
 res_hhs1_brsv_coinfect$DEobj$optim$bestval
-res_brsv_coinfect<-list.files(path="pomp_result_1213/testb_result_coinfect/",pattern=".rds")
+res_brsv_coinfect<-list.files(path="pomp_longphi_result/res_brsv_coinfect/",pattern=".rds")
 for (i in 1:length(res_brsv_coinfect)){
-   load(paste("pomp_result_1213/testb_result_coinfect/",res_brsv_coinfect[i],sep=""))
+   load(paste("pomp_longphi_result/res_brsv_coinfect/",res_brsv_coinfect[i],sep=""))
    print(paste0("load ",res_brsv_coinfect[i]))
 }
 
 res_brsv_coinfect_list<-list(
-   res_hhs1_brsv_coinfect,res_hhs2_brsv_coinfect,res_hhs3_brsv_coinfect,
+   res_hhs1_brsv_coinfect,res_hhs2_brsv_coinfect,res_hhs3_brsv_coinfect,res_hhs4_brsv_coinfect,
    res_hhs5_brsv_coinfect,res_hhs6_brsv_coinfect,
    res_hhs7_brsv_coinfect,res_hhs8_brsv_coinfect,res_hhs9_brsv_coinfect,res_hhs10_brsv_coinfect)
 est_res_brsv_coinfect<-get_est_all(res_brsv_coinfect_list)
@@ -30,9 +30,9 @@ rm(res_brsv_coinfect_list,res_hhs1_brsv_coinfect,res_hhs2_brsv_coinfect,res_hhs3
 #########################################################################################  
 
 
-res_brsv_neutral<-list.files(path="pomp_result_1213/testb_result_neutral/",pattern=".rds")
+res_brsv_neutral<-list.files(path="pomp_longphi_result/res_brsv_neutral/",pattern=".rds")
 for (i in 1:length(res_brsv_neutral)){
-   load(paste("pomp_result_1213/testb_result_neutral/",res_brsv_neutral[i],sep=""))
+   load(paste("pomp_longphi_result/res_brsv_neutral/",res_brsv_neutral[i],sep=""))
    print(paste0("load ",res_brsv_neutral[i]))
 }
 
@@ -53,9 +53,9 @@ rm(res_hhs1_brsv_neutral,res_hhs2_brsv_neutral,res_hhs3_brsv_neutral,
 
 #########################################################################################   
 
-res_brsv_psi<-list.files(path="pomp_result_1213/res_brsv_psi/",pattern=".rds")
+res_brsv_psi<-list.files(path="pomp_longphi_result/res_brsv_psi/",pattern=".rds")
 for (i in 1:length(res_brsv_psi)){
-   load(paste("pomp_result_1213/res_brsv_psi/",res_brsv_psi[i],sep=""))
+   load(paste("pomp_longphi_result/res_brsv_psi/",res_brsv_psi[i],sep=""))
    print(paste0("load ",res_brsv_psi[i]))
 }
 
@@ -76,9 +76,9 @@ rm(res_hhs1_brsv_psi,res_hhs2_brsv_psi,res_hhs3_brsv_psi,
 #########################################################################################   
 
 
-res_brsv_chi<-list.files(path="pomp_result_1213/res_brsv_chi/",pattern=".rds")
+res_brsv_chi<-list.files(path="pomp_longphi_result/res_brsv_chi/",pattern=".rds")
 for (i in 1:length(res_brsv_chi)){
-   load(paste("pomp_result_1213/res_brsv_chi/",res_brsv_chi[i],sep=""))
+   load(paste("pomp_longphi_result/res_brsv_chi/",res_brsv_chi[i],sep=""))
    print(paste0("load ",res_brsv_chi[i]))
    
 }
@@ -86,7 +86,6 @@ for (i in 1:length(res_brsv_chi)){
 
 res_brsv_chi_list<-list(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
                         res_hhs4_brsv_chi,res_hhs5_brsv_chi,res_hhs6_brsv_chi,
-                        res_hhs4_brsv_chi,res_hhs6_brsv_chi,
                         res_hhs7_brsv_chi,res_hhs8_brsv_chi,res_hhs9_brsv_chi,res_hhs10_brsv_chi)
 est_res_brsv_chi<-get_est_all(res_brsv_chi_list)
 get_fitmeasure_all(res_brsv_chi_list)%>%
@@ -100,13 +99,23 @@ rm(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
 #########################################################################################   
 est_res_brsv<-rbind(est_res_brsv_neutral,est_res_brsv_psi,est_res_brsv_chi,est_res_brsv_coinfect)
 
+rbind(result_res_brsv_neutral,result_res_brsv_psi,result_res_brsv_chi,result_res_brsv_coinfect)%>%
+   select("Pathogen2","HHSregion","Hypothesis",
+          "R01","R02","amplitude1","amplitude2","tpeak1","tpeak2","rho1","rho2", "psi","chi",
+          "loglik","AIC","R2","RMSE" )%>%
+   mutate(psi=1-psi,
+          chi=1-chi)%>%
+   melt(id.vars=c("Pathogen2","HHSregion","Hypothesis"))%>%
+   dcast(Pathogen2 + HHSregion+variable~ Hypothesis)%>%
+   select(Pathogen2, HHSregion, variable, neutral,psi,chi,co_infect) -> result_res_brsv
+
+write.csv(result_res_brsv,"./figures/result_res_brsv_longphhi.csv",row.names = FALSE)
 
 
 
 
 
-
-hypo_levels=c("neutral","psi","chi","co-infect")
+hypo_levels=c("neutral","psi","chi","co_infect")
 
 est_res_brsv%>%
    mutate(hyphothesis=factor(hyphothesis,levels=hypo_levels))%>%
@@ -157,8 +166,8 @@ inc_data_fit<-inc_data_perdic%>%
    pivot_wider(names_from = virus, values_from = cases)%>%
    drop_na()%>%
    mutate(method=case_when(
-      time<=6.5 ~ "Model fit",
-      time>6.5 ~ "Project"
+      time<=6.5 ~ "Model fitting",
+      time>6.5 ~ "Prediction"
    ))
 
 
@@ -166,8 +175,8 @@ inc_data_fit<-inc_data_perdic%>%
       mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
       mutate(pathogen=factor(type,levels=patho_order))%>%
       mutate(method=case_when(
-         time<=6.5 ~ "Model fit",
-         time>6.5 ~ "Project"
+         time<=6.5 ~ "Model fitting",
+         time>6.5 ~ "Prediction"
       ))%>%
       #filter(HHSregion!=1 | hypothesis!="chi")%>%
       #filter(HHSregion!=6 | hypothesis!="psi")%>%

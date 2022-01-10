@@ -137,8 +137,40 @@ save(inc_data_perdic, file = "inc_data_perdic.rds")
 
 
   
-  
+inc_data_1618 <- (
+  data_perdic %.>%
+    filter(.,data_perdic>=2015.5) %.>%
+    rbind(., 
+          tibble(date = data_perdic$date %.>% min(.) - 1/52,
+                 time = data_perdic$time %.>% min(.) - 1/52, 
+                 RSVpos =  NA, 
+                 fluApos = NA, 
+                 fluBpos = NA, 
+                 HHS_REGION = 1:10)) %.>%
+    rbind(.,
+          tibble(date=time_add[3],
+                 time=time_add[3]-2011,
+                 RSVpos =  NA, 
+                 fluApos = NA, 
+                 fluBpos = NA, 
+                 HHS_REGION = 1:10))%.>%
+    rbind(.,
+          tibble(date=time_add[4],
+                 time=time_add[4]-2011,
+                 RSVpos =  NA, 
+                 fluApos = NA, 
+                 fluBpos = NA, 
+                 HHS_REGION = 1:10))%.>%
+    right_join(., demog, by = "HHS_REGION") %.>% 
+    arrange(., time) %.>% 
+    gather(., key = "virus", value = "cases", -c(time, date, HHS_REGION, pop_ave_sum)) %.>% 
+    mutate(.,
+           N = pop_ave_sum,
+           virus = str_remove(virus, "pos")) %.>% 
+    select(., -pop_ave_sum)
+)
 
 
+save(inc_data_1618 , file = "inc_data_1618.rds")
 
 
