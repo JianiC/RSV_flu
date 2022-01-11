@@ -223,7 +223,7 @@ getparam<-function(res_hhs){
       mutate(phi1=365/180, phi2=365/180,
              chi=1)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
-      mutate(AIC=calculate_aic(loglik,npar=8),
+      mutate(AIC=calculate_aic(loglik,npar=9),
              hyphothesis="psi",
              pathogen1=res_hhs$total1,
              pathogen2=res_hhs$total2,
@@ -236,7 +236,7 @@ getparam<-function(res_hhs){
       mutate(phi1=365/180, phi2=365/180,
              psi=1)%>%
       mutate(loglik = -(res_hhs$DEobj$optim$bestval))%>%
-      mutate(AIC=calculate_aic(loglik,npar=8),
+      mutate(AIC=calculate_aic(loglik,npar=9),
              hyphothesis="chi",
              pathogen1=res_hhs$total1,
              pathogen2=res_hhs$total2,
