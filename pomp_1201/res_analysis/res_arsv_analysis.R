@@ -102,7 +102,7 @@ source("./fit_functions.R", chdir = TRUE)
      res_hhs4_arsv_chi,res_hhs5_arsv_chi,res_hhs6_arsv_chi,
      res_hhs7_arsv_chi,res_hhs8_arsv_chi,res_hhs9_arsv_chi,res_hhs10_arsv_chi,res_arsv_chi_list)
   #########################################################################################   
-  est_res_arsv<-rbind(est_res_arsv_neutral,est_res_arsv_psi,est_res_arsv_chi,est_res_arsv_coinfect)
+  #est_res_arsv<-rbind(est_res_arsv_neutral,est_res_arsv_psi,est_res_arsv_chi,est_res_arsv_coinfect)
   
   rbind(result_res_arsv_neutral,result_res_arsv_psi,result_res_arsv_chi,result_res_arsv_coinfect)%>%
     select("Pathogen2","HHSregion","Hypothesis",
@@ -116,89 +116,40 @@ source("./fit_functions.R", chdir = TRUE)
   
   write.csv(result_res_arsv,"./figures/result_res_arsv_longphhi.csv",row.names = FALSE)
   
-  hypo_levels=c("neutral","psi","chi","co_infect")
- 
-  est_res_arsv%>%
-    mutate(hyphothesis=factor(hyphothesis,levels=hypo_levels))%>%
-    ggplot(aes(x=hyphothesis,y=AIC,color=hyphothesis))+
-    geom_point(size=3)+
-    facet_wrap(~HHSregion,scales="free_y",nrow = 1)+
-    theme_bw()+
-    theme(legend.position="bottom")+
-    #scale_color_discrete(name = "Hypothesis", labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))+
-    scale_colour_brewer(palette = "Dark2",name = "Hypothesis", 
-                        labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))+
-    theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())->arsv_AIC
-  
-  
-  
-## plot trajectory fit
-  inc_data_fit<-inc_data_perdic%>%
-    mutate(HHSregion=HHS_REGION)%>%
-    pivot_wider(names_from = virus, values_from = cases)%>%
-    drop_na()%>%
-    mutate(method=case_when(
-      time<=6.5 ~ "Model fitting",
-      time>6.5 ~ "Prediction"
-    ))
-  
-  traj_fit_arsv<-rbind(traj_fit_arsv_neutral,traj_fit_arsv_psi,traj_fit_arsv_chi,traj_fit_arsv_coinfect)
-  traj_fit_arsv_coinfect%>%
-    mutate(hypothesis="co_infect")
-  hypo_levels=c("neutral","psi","chi","co_infect")
-  patho_order<-c("RSV","fluA")
-  traj_fit_arsv%>%
-    mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
-    mutate(pathogen=factor(type,levels=patho_order))%>%
-    mutate(method=case_when(
-      time<=6.5 ~ "Model fitting",
-      time>6.5 ~ "Prediction"
-    ))%>%
-    ggplot(aes(x=time+2011,y=cases))+
-    geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+
-
-    geom_area(data=inc_data_fit,aes(x=date,y=fluA),fill="gray",alpha=0.6)+
-    geom_line(aes(color=hypothesis,linetype=pathogen),size=0.5)+
-    facet_grid(HHSregion~method,scales="free_x",space="free")+
-
-
-    geom_area(data=inc_data_fit,aes(x=date,y=fluA),fill="gray",alpha=0.4)+
-    geom_line(aes(color=hypothesis,linetype=type))+
-    facet_grid(HHSregion~method,scales= "free_x", space="free_x")+
-    scale_colour_brewer(palette = "Dark2")+
-    theme_bw()+
-    xlab("time(weeks)")+
-    scale_colour_brewer(palette = "Dark2",name = "Hypothesis", 
-                        labels = c("neutral", "inhibition on co-infection", "cross-protection","co-infection + cross-protection")) ->arsv_trajfit
-#+
- #   theme(legend.position="bottom"
     
+
 
   
 ## plot compartment for sepcific HHS region
 ## HHS5: both psi and chi <1
-test_traj(res_hhs = res_hhs5_arsv_coinfect)%>%
+test_traj(res_hhs = res_hhs3_arsv_neutral)%>%
   slice(., 2:n()) %>% 
   select(., -`.id`) %.>% 
   gather(., "comp", "count", -time) %>% 
   ggplot(., aes(x = time + 2011, y = count)) +
   geom_line()+
   facet_wrap(.~comp, scales = "free")+
+  theme_classic()+
   xlab("Time")+
-  ylab("Simulated cases under neutral model")
+  ylab("Simulated cases under neutral model")+
+  scale_x_continuous(breaks = seq(2014, 2018, by = 2))->HHS3_neutral
   
   
-test_traj(res_hhs = res_hhs5_arsv_neutral)%>%
+test_traj(res_hhs = res_hhs3_arsv_coinfect)%>%
   slice(., 2:n()) %>% 
   select(., -`.id`) %.>% 
   gather(., "comp", "count", -time) %>% 
   ggplot(., aes(x = time + 2011 , y = count)) +
   geom_line()+
   facet_wrap(.~comp, scales = "free")  +
+  theme_classic()+
   xlab("Time")+
-  ylab("Simulated cases under co-infection and cross-protection model")
+  ylab("Simulated cases under inhibition of co-infection and cross-immunity model")+
+  scale_x_continuous(breaks = seq(2014, 2018, by = 2))->HHS3_coinfect
+
+ggarrange(
+  HHS3_neutral, HHS3_coinfect, labels = c("A", "B"),
+  nrow=2)
 
   
   

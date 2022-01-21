@@ -97,7 +97,7 @@ rm(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
    res_hhs4_brsv_chi,res_hhs5_brsv_chi,res_hhs6_brsv_chi,
    res_hhs7_brsv_chi,res_hhs8_brsv_chi,res_hhs9_brsv_chi,res_hhs10_brsv_chi,res_brsv_chi_list)
 #########################################################################################   
-est_res_brsv<-rbind(est_res_brsv_neutral,est_res_brsv_psi,est_res_brsv_chi,est_res_brsv_coinfect)
+#est_res_brsv<-rbind(est_res_brsv_neutral,est_res_brsv_psi,est_res_brsv_chi,est_res_brsv_coinfect)
 
 rbind(result_res_brsv_neutral,result_res_brsv_psi,result_res_brsv_chi,result_res_brsv_coinfect)%>%
    select("Pathogen2","HHSregion","Hypothesis",
@@ -117,85 +117,13 @@ write.csv(result_res_brsv,"./figures/result_res_brsv_longphhi.csv",row.names = F
 
 hypo_levels=c("neutral","psi","chi","co_infect")
 
-est_res_brsv%>%
-   mutate(hyphothesis=factor(hyphothesis,levels=hypo_levels))%>%
-
-   ggplot(aes(x=hyphothesis,y=AIC,color=hyphothesis))+
-
-  # ggplot(aes(x=hyphothesis,y=loglik,color=hyphothesis))+
-
-   geom_point(size=3)+
-   facet_wrap(~HHSregion,scales="free_y",nrow = 1)+
-   theme_bw()+
-   theme(legend.position="bottom")+
-
-   scale_colour_brewer(palette = "Dark2")+
-   scale_linetype_manual(values=c("solid", "dotted"))+
-   theme(legend.position="bottom")+
-   #scale_color_discrete(name = "Hypothesis", labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))+
-   scale_colour_brewer(palette = "Dark2",name = "Hypothesis", 
-                       labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))+
-   theme(axis.title.x=element_blank(),
-         axis.text.x=element_blank(),
-         axis.ticks.x=element_blank())->brsv_AIC
 
 
  
 
 
 
-## plot trajectory fit
-inc_data_fit<-inc_data_perdic%>%
-   mutate(HHSregion=HHS_REGION)%>%
-   pivot_wider(names_from = virus, values_from = cases)%>%
-   drop_na()%>%
-   mutate(method=case_when(
-      time<=6.5 ~ "Fit",
-      time>6.5 ~ "predict"
-   ))
 
-traj_fit_brsv<-rbind(traj_fit_brsv_neutral,traj_fit_brsv_coinfect,traj_fit_brsv_psi,traj_fit_brsv_chi)
-
-traj_fit_brsv_coinfect%>%
-   mutate(hypothesis="co_infect")
-hypo_levels=c("neutral","psi","chi","co_infect")
-patho_order<-c("RSV","fluB")
-
-inc_data_fit<-inc_data_perdic%>%
-   mutate(HHSregion=HHS_REGION)%>%
-   pivot_wider(names_from = virus, values_from = cases)%>%
-   drop_na()%>%
-   mutate(method=case_when(
-      time<=6.5 ~ "Model fitting",
-      time>6.5 ~ "Prediction"
-   ))
-
-
-   traj_fit_brsv%>%
-      mutate(hypothesis=factor(hypothesis,levels=hypo_levels))%>%
-      mutate(pathogen=factor(type,levels=patho_order))%>%
-      mutate(method=case_when(
-         time<=6.5 ~ "Model fitting",
-         time>6.5 ~ "Prediction"
-      ))%>%
-      #filter(HHSregion!=1 | hypothesis!="chi")%>%
-      #filter(HHSregion!=6 | hypothesis!="psi")%>%
-      #filter(HHSregion!=6 | hypothesis!="chi")%>%
-      #filter(HHSregion!=7 | hypothesis!="chi")%>%
-      #filter(HHSregion!=7 | hypothesis!="neutral")%>%
-      #filter(HHSregion!=6)%>%
-      #filter(HHSregion!=7)%>%
-      ggplot(aes(x=time+2011,y=cases))+
-      geom_line(aes(color=hypothesis,linetype=pathogen ),alpha=0.5)+
-      
-      geom_area(data=inc_data_fit,aes(x=date,y=fluB),fill="gray",alpha=0.6)+
-      geom_area(data=inc_data_fit,aes(x=date,y=RSV),fill="brown",alpha=0.4)+
-      facet_grid(HHSregion~method,scales="free_x",space="free")+
-      scale_colour_brewer(palette = "Dark2")+
-      theme_bw()+
-      xlab("time(weeks)")+
-      scale_colour_brewer(palette = "Dark2",name = "Hypothesis", 
-                          labels = c("neutral", "inhibition on co-infection", "cross-protection","co-ifection + cross-protection"))->brsv_trajfit
 #      theme(legend.position="bottom")
       
    
