@@ -1,3 +1,4 @@
+source("./fit_functions.R", chdir = TRUE) 
 
 loglik<-function(fit_par,pomp_data){
   
@@ -59,7 +60,7 @@ par_loglik<-function(res_hhs,par){
     }
     print("loglik estimation for psi is done")
   }else{
-    for (i in seq(0, 1, by = 0.01)) {
+    for (i in seq(0, 1, by = 0.002)) {
       
       fit_par["chi"]<-i
       loglik_value <-loglik(fit_par = fit_par,pomp_data = pomp_data_hhs)
