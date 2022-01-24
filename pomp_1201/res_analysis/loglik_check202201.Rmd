@@ -1,0 +1,82 @@
+---
+title: "Loglik prfile check 202201"
+output: html_document
+---
+
+```{r setup, include=FALSE,warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(warning = FALSE,message = FALSE)
+source("./src_fit.R", chdir = TRUE) 
+source("./par_CI_funs.R", chdir = TRUE) 
+load("./pomp_longphi_result/res_arsv_coinfect/res_hhs3_arsv_coinfect.rds")
+```
+
+## R Markdown : Check the cycling loglikelihood profile
+ test with res_hhs3_arsv_coinfect for parameter chi (cross-immunity)
+### 1. check loglik profile function
+```{r }
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+## pomp data for hhs3 rsv-fluA
+res_arsv_hhs3_pomp_data_hhs <- (
+  inc_data_add %.>% 
+    make_data_pomp_ready(., virus_combo =c("RSV","fluA"), HHS_region = res_hhs3_arsv_coinfect$HHS)
+)
+
+## optimal estimate 
+res_arsv_hhs3_fit_par <- get_rp_vals(data = inc_data_add,res_hhs3_arsv_coinfect)
+res_arsv_hhs3_fit_par
+
+## estimate loglik using trajob function
+loglik(fit_par = res_arsv_hhs3_fit_par,pomp_data = res_arsv_hhs3_pomp_data_hhs )->fit_loglik
+fit_loglik
+
+res_hhs3_arsv_coinfect$DEobj$optim$bestval
+
+```
+### 2.loglik funtion works, check simulations with different chi, keep the rest of estimaters same
+```{r,warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(message = FALSE)
+result<-data.frame()
+for (i in seq(0.2, 0.8, by = 0.005)) {
+  
+  res_arsv_hhs3_fit_par ["chi"]<-i
+  loglik_value <-loglik(fit_par = res_arsv_hhs3_fit_par,pomp_data = res_arsv_hhs3_pomp_data_hhs)
+  
+  out<-list("chi"=i,"loglik"=-loglik_value)
+  #print(out)
+  result<-rbind(result,out)
+  
+}
+result
+
+
+
+maxloglik <- max(result$loglik)
+plot(loglik~chi,result,type="l")
+cutoff <- maxloglik-qchisq(p=0.95,df=1)/2
+range(subset(result,loglik>cutoff))
+```
+
+### 3. further estimate the CI interval
+#### narrow down the simulation space of chi
+```{r}
+result2<-data.frame()
+for (i in seq(0.4135, 0.4145, by = 0.00005)) {
+  
+  res_arsv_hhs3_fit_par ["chi"]<-i
+  loglik_value <-loglik(fit_par = res_arsv_hhs3_fit_par,pomp_data = res_arsv_hhs3_pomp_data_hhs)
+  
+  out<-list("chi"=i,"loglik"=-loglik_value)
+  #print(out)
+  result2<-rbind(result2,out)
+  
+}
+
+maxloglik <- max(result2$loglik)
+plot(loglik~chi,result2,type="l")
+cutoff <- maxloglik-qchisq(p=0.95,df=1)/2
+range(subset(result2,loglik>cutoff)$chi)
+abline(v=range(subset(result2,loglik>cutoff)$chi),lty=2)
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

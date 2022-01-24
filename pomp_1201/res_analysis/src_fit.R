@@ -5,3 +5,5 @@ source("./param_constraints.R", chdir = TRUE)
 source("./fit_functions.R", chdir = TRUE)
 
 load("inc_data_perdic.rds")
+load("./inc_data_perdic.rds")
+load("./inc_data_add.rds")
