@@ -21,10 +21,6 @@ my_controls <- list(itermax = 10,
                     strategy = 1,
                     steptol = 750, reltol = 1e-8)
 
-
-
-
-
 est_past_est<-data.frame(R01=2.012,
                          R02=1.243,
                          amplitude1=0.116,
