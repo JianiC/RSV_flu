@@ -61,5 +61,5 @@ for (i in 1:length(chi_vals)){
   
 }
 
-write_csv(res_hhs5_arsv_chi,"res_hhs5_arsv_chi_loglik.csv",row.names=FALSE)
+write.csv(res_hhs5_arsv_chi,"res_hhs5_arsv_chi_loglik.csv",row.names=FALSE)
 
