@@ -1,0 +1,2 @@
+load("/Users/jianichen/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/00_script/res_hhs4_arsv_coinfect.rds")
+load("/Users/jianichen/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/00_script/inc_data.rds")

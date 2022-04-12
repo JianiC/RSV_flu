@@ -23,7 +23,7 @@ source("./fit_functions.R", chdir = TRUE)
               by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_arsv_coinfect
 
   
-  traj_fit_arsv_coinfect<-get_traj_fitall(res_arsv_coinfect_list)
+  traj_fit_arsv_coinfect<-get_traj_fitall(data=inc_data_add,res_arsv_coinfect_list)
   
 ## clear large list to release memory  
   rm(res_arsv_coinfect_list,res_hhs1_arsv_coinfect,res_hhs2_arsv_coinfect,res_hhs3_arsv_coinfect,
@@ -49,7 +49,7 @@ source("./fit_functions.R", chdir = TRUE)
               by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_arsv_neutral
   
   
-  traj_fit_arsv_neutral<-get_traj_fitall(res_arsv_neutral_list)
+  traj_fit_arsv_neutral<-get_traj_fitall(data=inc_data_add,res_arsv_neutral_list)
   
   rm(res_hhs1_arsv_neutral,res_hhs2_arsv_neutral,res_hhs3_arsv_neutral,
      res_hhs4_arsv_neutral,res_hhs5_arsv_neutral,res_hhs6_arsv_neutral,
@@ -72,7 +72,7 @@ source("./fit_functions.R", chdir = TRUE)
     full_join(est_res_arsv_psi,
               by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_arsv_psi
   
-  traj_fit_arsv_psi<-get_traj_fitall(res_arsv_psi_list)
+  traj_fit_arsv_psi<-get_traj_fitall(data=inc_data_add,res_arsv_psi_list)
   
   rm(res_hhs1_arsv_psi,res_hhs2_arsv_psi,res_hhs3_arsv_psi,
      res_hhs4_arsv_psi,res_hhs5_arsv_psi,res_hhs6_arsv_psi,
@@ -96,7 +96,7 @@ source("./fit_functions.R", chdir = TRUE)
   get_fitmeasure_all(res_arsv_chi_list)%>%
     full_join(est_res_arsv_chi,
               by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_arsv_chi
-  traj_fit_arsv_chi<-get_traj_fitall(res_arsv_chi_list)
+  traj_fit_arsv_chi<-get_traj_fitall(data=inc_data_add,res_arsv_chi_list)
   
   rm(res_hhs1_arsv_chi,res_hhs2_arsv_chi,res_hhs3_arsv_chi,
      res_hhs4_arsv_chi,res_hhs5_arsv_chi,res_hhs6_arsv_chi,
@@ -114,11 +114,36 @@ source("./fit_functions.R", chdir = TRUE)
     dcast(Pathogen2 + HHSregion+variable~ Hypothesis)%>%
     select(Pathogen2, HHSregion, variable, neutral,psi,chi,co_infect) -> result_res_arsv
   
-  write.csv(result_res_arsv,"./figures/result_res_arsv_longphhi.csv",row.names = FALSE)
+  write.csv(result_res_arsv,"./figures/result_res_arsv_longphhi_check.csv",row.names = FALSE)
   
-    
+ result_res_arsv<-read.csv("./figures/result_res_arsv_longphhi.csv")
+ 
+ result_res_arsv%>%
+   filter(variable=="AIC")%>%
+   gather(hypothesis, AIC, neutral:co_infect, factor_key=TRUE)%>%
+   group_by(HHSregion)%>%
+   summarise(min_AIC=min(AIC))->arsv_minAIC
+   
+ result_res_arsv%>%
+   filter(variable=="AIC")%>%
+   gather(hypothesis, AIC, neutral:co_infect, factor_key=TRUE)%>%
+   left_join(arsv_minAIC,by=c("HHSregion"="HHSregion"))%>%
+   mutate(delta_AIC=AIC-min_AIC)%>%
+   select(Pathogen2,HHSregion,hypothesis,delta_AIC)%>%
+   spread(hypothesis,delta_AIC)%>%
+   mutate(variable="deltaAIC")->arsv_deltaAIC
+ 
+ result_res_arsv%>%
+   filter(variable=="R2"| variable=="RMSE")%>%
+   rbind(arsv_deltaAIC)->arsv_modelcompare
 
-
+ write.csv(arsv_modelcompare,"./figures/arsv_modelcompare.csv",row.names = FALSE)
+ 
+ 
+ 
+ 
+ 
+ 
   
 ## plot compartment for sepcific HHS region
 ## HHS5: both psi and chi <1

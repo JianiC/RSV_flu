@@ -2,7 +2,6 @@
 source("./fit_functions.R", chdir = TRUE) 
 
 
-res_hhs1_brsv_coinfect$DEobj$optim$bestval
 res_brsv_coinfect<-list.files(path="pomp_longphi_result/res_brsv_coinfect/",pattern=".rds")
 for (i in 1:length(res_brsv_coinfect)){
    load(paste("pomp_longphi_result/res_brsv_coinfect/",res_brsv_coinfect[i],sep=""))
@@ -19,7 +18,7 @@ get_fitmeasure_all(res_brsv_coinfect_list)%>%
              by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_coinfect
 
 
-traj_fit_brsv_coinfect<-get_traj_fitall(res_brsv_coinfect_list)
+traj_fit_brsv_coinfect<-get_traj_fitall(data=inc_data_add,res_brsv_coinfect_list)
 
 ## clear large list to release memory  
 rm(res_brsv_coinfect_list,res_hhs1_brsv_coinfect,res_hhs2_brsv_coinfect,res_hhs3_brsv_coinfect,
@@ -44,7 +43,7 @@ est_res_brsv_neutral<-get_est_all(res_brsv_neutral_list)
 get_fitmeasure_all(res_brsv_neutral_list)%>%
    full_join(est_res_brsv_neutral,
              by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_neutral
-traj_fit_brsv_neutral<-get_traj_fitall(res_brsv_neutral_list)
+traj_fit_brsv_neutral<-get_traj_fitall(data=inc_data_add,res_brsv_neutral_list)
 
 rm(res_hhs1_brsv_neutral,res_hhs2_brsv_neutral,res_hhs3_brsv_neutral,
    res_hhs4_brsv_neutral,res_hhs5_brsv_neutral,res_hhs6_brsv_neutral,
@@ -67,7 +66,7 @@ get_fitmeasure_all(res_brsv_psi_list)%>%
    full_join(est_res_brsv_psi,
              by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_psi
 
-traj_fit_brsv_psi<-get_traj_fitall(res_brsv_psi_list)
+traj_fit_brsv_psi<-get_traj_fitall(data=inc_data_add,res_brsv_psi_list)
 
 rm(res_hhs1_brsv_psi,res_hhs2_brsv_psi,res_hhs3_brsv_psi,
    res_hhs4_brsv_psi,res_hhs5_brsv_psi,res_hhs6_brsv_psi,
@@ -91,7 +90,7 @@ est_res_brsv_chi<-get_est_all(res_brsv_chi_list)
 get_fitmeasure_all(res_brsv_chi_list)%>%
    full_join(est_res_brsv_chi,
              by = c("HHSregion" =  "HHSregion", "Pathogen2"="pathogen2","Hypothesis" = "hyphothesis"))->result_res_brsv_chi
-traj_fit_brsv_chi<-get_traj_fitall(res_brsv_chi_list)
+traj_fit_brsv_chi<-get_traj_fitall(data=inc_data_add,res_brsv_chi_list)
 
 rm(res_hhs1_brsv_chi,res_hhs2_brsv_chi,res_hhs3_brsv_chi,
    res_hhs4_brsv_chi,res_hhs5_brsv_chi,res_hhs6_brsv_chi,
@@ -109,9 +108,31 @@ rbind(result_res_brsv_neutral,result_res_brsv_psi,result_res_brsv_chi,result_res
    dcast(Pathogen2 + HHSregion+variable~ Hypothesis)%>%
    select(Pathogen2, HHSregion, variable, neutral,psi,chi,co_infect) -> result_res_brsv
 
-write.csv(result_res_brsv,"./figures/result_res_brsv_longphhi.csv",row.names = FALSE)
+write.csv(result_res_brsv,"./figures/result_res_brsv_longphhi_check.csv",row.names = FALSE)
 
 
+result_res_brsv<-read.csv("./figures/result_res_brsv_longphhi.csv")
+
+result_res_brsv%>%
+   filter(variable=="AIC")%>%
+   gather(hypothesis, AIC, neutral:co_infect, factor_key=TRUE)%>%
+   group_by(HHSregion)%>%
+   summarise(min_AIC=min(AIC))->brsv_minAIC
+
+result_res_brsv%>%
+   filter(variable=="AIC")%>%
+   gather(hypothesis, AIC, neutral:co_infect, factor_key=TRUE)%>%
+   left_join(brsv_minAIC,by=c("HHSregion"="HHSregion"))%>%
+   mutate(delta_AIC=AIC-min_AIC)%>%
+   select(Pathogen2,HHSregion,hypothesis,delta_AIC)%>%
+   spread(hypothesis,delta_AIC)%>%
+   mutate(variable="deltaAIC")->brsv_deltaAIC
+
+result_res_brsv%>%
+   filter(variable=="R2"| variable=="RMSE")%>%
+   rbind(brsv_deltaAIC)->brsv_modelcompare
+
+write.csv(brsv_modelcompare,"./figures/brsv_modelcompare.csv",row.names = FALSE)
 
 
 

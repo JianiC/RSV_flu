@@ -4,7 +4,7 @@ library(lubridate)
 # load the data csv
 
 data <- read.csv("../original_data/pomp_HHSregion_case.csv")
-
+data <- read.csv("../original_data/pomp_HHSregion_case_new.csv")
 demog <- read.csv("../original_data/pop_HHSRegion.csv") %.>% 
   mutate(., HHS_REGION = HHS_region) %.>%
   select(., 4,3) 
@@ -82,7 +82,7 @@ inc_data_add <- (
 )
 
 
-#save(inc_data_add, file = "inc_data_add.rds")
+save(inc_data_add, file = "inc_data_add2.rds")
 
 data_perdic <- read.csv("../original_data/pomp_HHSregion_case_2018.csv")
 

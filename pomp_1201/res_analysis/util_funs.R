@@ -69,16 +69,16 @@ DE_traj_match <- function(param_constraints,
   # generate a grid of initial guesses
   if(is.null(best_past_est)) {
     
-    init_guess_grid <- sobol_design(lower = param_constraints$lower, 
+    init_guess_grid <- sobolDesign(lower = param_constraints$lower, 
                                     upper = param_constraints$upper, 
                                     nseq = ninit)   
   } else {
     
-    init_guess_grid <- sobol_design(lower = param_constraints$lower, 
+    init_guess_grid <- sobolDesign(lower = param_constraints$lower, 
                                     upper = param_constraints$upper, 
-                                    nseq = ninit) 
+                                    nseq = ninit)%>% 
     bind_rows(., best_past_est) %.>% 
-      replace(., is.na(.), 0) 
+      replace(., is.na(.), 1) 
     
   }
   
@@ -90,7 +90,8 @@ DE_traj_match <- function(param_constraints,
   RNGkind("L'Ecuyer-CMRG")
   
   # set multi-core cluster for parallel computation optimal solution
-  no_cores <- detectCores()  
+  no_cores <- detectCores() - 1
+  #no_cores <- 92
   
   registerDoParallel(cores = no_cores)  
   
@@ -141,6 +142,19 @@ make_data_pomp_ready <- function(data = inc_data_add, virus_combo = c("RSV", "fl
 
 # make_data_pomp_ready()
 
+
+## get past estimate
+past_est<-function(res_hhs){
+  
+  param_vector<-as.data.frame(res_hhs$DEobj$optim$bestmem)%>%
+    cbind(row.names(.))%>%
+    pivot_wider(names_from = `row.names(.)`, values_from = `res_hhs$DEobj$optim$bestmem`)
+  
+  
+  return(param_vector)
+  
+  
+}
 
 
 

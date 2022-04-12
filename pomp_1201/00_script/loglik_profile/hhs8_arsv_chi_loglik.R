@@ -12,7 +12,7 @@ inc_data_add %.>%
   )
 
 ## from estimation
-load("./res_hhs8_arsv_coinfect.rds")
+load("./res_hhs8_arsv_coinfect.Rdata")
 
 best_past_est<-data.frame(past_est(res_hhs8_arsv_coinfect)$R01,
                           past_est(res_hhs8_arsv_coinfect)$R02,

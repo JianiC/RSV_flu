@@ -275,12 +275,12 @@ get_est_all<-function(res_list){
 
 
 
-get_traj_fitall<-function(res_list){
+get_traj_fitall<-function(data=inc_data_perdic, res_list){
   
   df_traj_fit<-data.frame()
   
   for( i in 1:length(res_list)){
-    out<-traj_fit(res_hhs=res_list[[i]])
+    out<-traj_fit(data,res_hhs=res_list[[i]])
     df_traj_fit<-rbind(df_traj_fit,out)
     
   }
@@ -290,19 +290,33 @@ get_traj_fitall<-function(res_list){
 ## calculate R2 and RMSE from POMP results to evaluate model fit
 modelfit_meas<-function(data = inc_data_add,res_hhs){
   traj_fit(data, res_hhs)%>%
-    inner_join(data, by = c("time" = "time", "type"="virus"))%>%
+    inner_join(data, by = c("time" = "time", "type"="virus","HHSregion"="HHS_REGION"))%>%
     drop_na()-> traj_fit_withdata
   
   data.frame(
-    R2 = R2(traj_fit_withdata$cases.x,traj_fit_withdata$cases.y),
+    R2 = R2(log(traj_fit_withdata$cases.x+1),log(traj_fit_withdata$cases.y+1)),
     RMSE = RMSE(traj_fit_withdata$cases.x,traj_fit_withdata$cases.y),
     HHSregion = traj_fit_withdata$HHSregion[1],
     Hypothesis = traj_fit_withdata$hypothesis[1],
     Pathogen2 = traj_fit_withdata$pathogen2[1]) -> model_fit_measure
   
   return(model_fit_measure)
+  #return(traj_fit_withdata)
+
   
 }
+
+test<-modelfit_meas(res_hhs=res_hhs2_arsv_coinfect)
+
+HHS_region=res_hhs2_arsv_coinfect$HHS
+
+traj_fit(data = inc_data_add,res_hhs = res_hhs2_arsv_coinfect)%>%
+  inner_join(inc_data_add, by = c("time" = "time", "type"="virus","HHSregion"="HHS_REGION"))
+
+
+
+
+
 ## loop through all HHS region
 get_fitmeasure_all<-function(res_list){
   df_est<-data.frame()
@@ -313,3 +327,4 @@ get_fitmeasure_all<-function(res_list){
   }
   return(df_est)
 }
+
