@@ -1,3 +1,5 @@
+
+
 # load packages 
 packages <- c("tidyverse", "stringr",
               "pomp", "magrittr", "wrapr",
@@ -5,7 +7,8 @@ packages <- c("tidyverse", "stringr",
               "LaplacesDemon", 
               "rootSolve",
               "DEoptim", "doParallel", "doRNG", 
-              "parallel", "caret","reshape2")
+              "parallel", "caret","reshape2","cowplot",
+              "ggpubr")
 
 
 lapply(packages, library, character.only = TRUE)

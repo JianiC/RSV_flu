@@ -131,9 +131,22 @@ arsv_psi_loglik%>%
   facet_wrap(parm ~ .)+
   theme_classic()+
   xlab("Parameter value")+
+  ylab("loglikelihood")+
   scale_colour_brewer(palette = "Dark2",name="Parameters",
                       labels=c("Strength of cross-immunity",
-                               "Propotion of inhibition of co-infection"))->HHS1_arsv_loglik
+                               "Propotion of inhibition of co-infection"))+
+  gg.theme +
+  theme(
+        legend.position = "none") +
+  guides(linetype = guide_legend(ncol = 1, order = 1), 
+         colour = guide_legend(ncol = 1)) +
+  theme(legend.spacing.y = unit(0.1, "lines"),
+        legend.key = element_blank(), 
+        legend.background = element_blank(),
+        strip.text.x = element_blank())+
+  scale_x_continuous(
+    labels = label_number(accuracy = 0.1),
+    breaks = seq(0,1,0.25))->HHS1_arsv_loglik
 
 brsv_chi_CI_loglik%>%
   filter(HHS_region==1)->HHS1_brsv_chi_CI_loglik
@@ -146,6 +159,7 @@ brsv_psi_loglik%>%
   rbind(brsv_chi_loglik)%>%
   mutate(hypo=factor(hypo,levels=hypo_levels))%>%
   filter(HHS_region==1)%>%
+  drop_na()%>%
   ggplot(aes(x=hypo_value,y=loglik))+
   geom_point(aes(colour=parm))+
   geom_line(aes(colour=parm))+
@@ -155,9 +169,44 @@ brsv_psi_loglik%>%
   facet_wrap(parm ~ .)+
   theme_classic()+
   xlab("Parameter value")+
+  ylab("Loglikelihood")+
   scale_colour_brewer(palette = "Dark2",name="Parameters",
                       labels=c("Strength of cross-immunity",
-                               "Propotion of inhibition of co-infection"))->HHS1_brsv_loglik
+                               "Propotion of inhibition of co-infection"))+
+  gg.theme +
+  theme(
+        legend.position = "none") +
+  guides(linetype = guide_legend(ncol = 1, order = 1), 
+         colour = guide_legend(ncol = 1)) +
+  theme(legend.spacing.y = unit(0.1, "lines"),
+        legend.key = element_blank(), 
+        legend.background = element_blank(),
+        strip.text.x = element_blank())+
+  scale_x_continuous(
+    labels = label_number(accuracy = 0.1),
+    breaks = seq(0,1,0.25))->HHS1_brsv_loglik
+
+
+legend <- get_legend(
+  HHS1_arsv_loglik + 
+    guides(color = guide_legend(nrow = 2),) +
+    theme(legend.position = "bottom",
+          legend.title=element_blank(),
+          text = element_text(size = 8))
+)
+
+
+plot_grid( HHS1_arsv_loglik+theme(text = element_text(size = 8)), 
+           HHS1_brsv_loglik+theme(text = element_text(size = 8)),
+           nrow = 2,
+        
+           labels = "AUTO", label_size = 12)->HHS1_rsv_loglik
+
+plot_grid(legend,
+          HHS1_rsv_loglik,
+          ncol=1,
+          rel_heights = c(.1, 1))->loglik_CI_repre
+
 
 ggarrange(
   HHS1_arsv_loglik, HHS1_brsv_loglik, labels = c("A", "B"),

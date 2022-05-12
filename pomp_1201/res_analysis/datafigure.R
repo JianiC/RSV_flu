@@ -50,7 +50,8 @@ HHS_corre<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
   result=data_frame(HHS_region=HHSreg,
                     corre=res$estimate,
                     CI_low=res$conf.int[1],
-                    CI_high=res$conf.int[2]
+                    CI_high=res$conf.int[2],
+                    virus=virus
                     )
   return(result)
   
@@ -114,9 +115,22 @@ regiondata%>%
         panel.background = element_blank(),
         panel.border = element_blank())+
   theme(legend.position="top")+
-  geom_text(data=fluA_label,aes(centroid_long,centroid_lat,label=label),color="black",size=3)+
+  theme(text = element_text(size = 8))+
+  theme(aspect.ratio = 0.5, 
+        legend.position = "top") +
+  guides(linetype = guide_legend(ncol = 1, order = 1), 
+         colour = guide_legend(ncol = 3)) +
+  theme(legend.spacing.y = unit(0.1, "lines"),
+        legend.key = element_blank(), 
+        legend.background = element_blank(),
+        strip.text.y = element_blank())+
+  geom_text(data=fluA_label,aes(centroid_long,centroid_lat,label=label),color="black",size=8)+
   #labs(fill="correlation coefficient of RSV and FluA weekly case")+
   scale_fill_gradient("Correation coefficient",limits=c(0,1))->p_RSVfluA_cor
+
+
+
+
 ###########RSV-fluB
 regiondata%>%
   dplyr::group_by(HHS_REGION)%>%
@@ -180,6 +194,56 @@ ggarrange(p_fluAfluB_cor,p_RSVfluA_cor,p_RSVfluB_cor,
 )->corre_map
 
 ###################################################################
+## facet to plot map together
+cor_labs<-c("FluA & FluB","RSV & FluA","RSV & FluB")
+names(cor_labs)<-c("fluA_fluB","RSV_fluA","RSV_fluB")
+
+
+regiondata%>%
+  left_join(rbind(RSV_fluA_cor,RSV_fluB_cor,fluA_fluB_cor),by=c("HHS_REGION"="HHS_region"))%>%
+  ggplot()+
+  geom_polygon( aes(x=long, y=lat, group = group, fill=corre)) + 
+  coord_map() +
+  theme(axis.title = element_blank(), 
+        axis.ticks = element_blank(), 
+        axis.text = element_blank(),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_blank())+
+  theme(legend.position="top")+
+  facet_wrap(~virus,labeller = labeller(virus=cor_labs))+
+  theme(text = element_text(size = 8))+
+  theme(aspect.ratio = 0.5, 
+        legend.position = "bottom") +
+  guides(linetype = guide_legend(ncol = 1, order = 1), 
+         colour = guide_legend(ncol = 3)) +
+  theme(legend.spacing.y = unit(0.1, "lines"),
+        legend.key = element_blank(), 
+        legend.background = element_blank(),
+        strip.text.y = element_blank())+
+  scale_fill_gradient("Correation coefficient",limits=c(0,1))->cor_map
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## propotion heatmap
 
 RSV_flu_surveliance %>% 
@@ -187,14 +251,14 @@ RSV_flu_surveliance %>%
   dplyr::summarise(RSVpos=sum(RSVpos),
                    fluApos=sum(fluApos),
                    fluBpos=sum(fluBpos))%>%
-  mutate(HHS_REGION="National")%>%
+  mutate(HHS_REGION="U.S.")%>%
   mutate(fluA_p=fluApos/(RSVpos+fluApos+fluBpos),
                                         RSV_p=RSVpos/(RSVpos+fluApos+fluBpos),
                                         fluB_p=fluBpos/(RSVpos+fluApos+fluBpos))%>%
   select(HHS_REGION,date,RSV_p,fluA_p,fluB_p)%>%
   as.data.frame()->RSV_flu_pro_national
 
-order<-c("National","1","2","3","4","5","6","7","8","9","10")
+order<-c("U.S.","1","2","3","4","5","6","7","8","9","10")
   RSV_flu_surveliance %>% 
   drop_na()%>%
   mutate(fluA_p=fluApos/(RSVpos+fluApos+fluBpos),
@@ -208,13 +272,31 @@ order<-c("National","1","2","3","4","5","6","7","8","9","10")
   ggplot(aes(x=date,y=percentage,fill=pathogen))+
   geom_area()+
   facet_grid(HHS_REGION~.)+
-  theme_classic()+
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1))+
+    theme(text = element_text(size = 8))+
+    theme( 
+          legend.position = "top") +
+    guides(linetype = guide_legend(ncol = 1, order = 1), 
+           colour = guide_legend(ncol = 3)) +
+    theme(legend.spacing.y = unit(0.1, "lines"),
+          legend.key = element_blank(), 
+          legend.background = element_blank())+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = seq(0,1,0.4)
+                     )+
   scale_fill_manual(name = "",values=c("#66A61E","#E6AB02","#E7298A"), labels = c("RSV","FluA", "FluB" ))+
   scale_x_continuous(breaks = seq(2011,2019,1),position = 'bottom',limits =c(2011,2019))+
   xlab("Date")+
-  ylab("Percentage")+
-  theme(legend.position="top")->surveliance_propotion
+  ylab("Percentage")->surveliance_propotion
+  
+  
+  
+plot_grid( surveliance_propotion, cor_map,
+          
+            nrow = 2,
+            labels = "AUTO", label_size = 12,
+          rel_heights = c(2.5,1))->data_figure 
+  
+  
 
 ggarrange(surveliance_propotion,ncol=2,labels="A",
           ggarrange(p_fluAfluB_cor,p_RSVfluA_cor,p_RSVfluB_cor,

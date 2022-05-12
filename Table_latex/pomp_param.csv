@@ -1,0 +1,19 @@
+﻿Symbol,Value,Definition
+N,,Total population in each HHS region
+R_0^RSV,"[0.5,10]",Reproductive number of RSV
+R_0^Flu,"[0.5,10]",Reproductive number of Flu A/ Flu B
+1/\gamma_RSV,9,Infectious period of RSV
+1/\gamma_Flu,3,Infectious period of Flu A/ Flu B
+1/\rho_RSV,180/365.25,Cross protection period after RSV infection
+1/\rho_Flu,180/365.25,Cross protection period after Flu infection
+1/\omega_RSV,2y,Duration of RSV immunity
+1/\omega_Flu,2y,Duration of Flu immunity
+b_RSV,"[0,1]",The amplitude of seasonality for RSV
+b_Flu,"[0,1]",The amplitude of seasonality for Flu
+b_0^RSV,"[1/365.25,1]",Timing of seasonal peak for RSV
+b_0^Flu,"[1/365.25,1]",Timing of seasonal peak for Flu
+\delta_RSV,"(0,1]",Case report rate for RSV
+\delta_Flu,"(0,1]",Case report rate for Flu
+\psi,"[0,1]",The proportion of inhibition of co-infection
+\chi,"[0,1]",Strength of cross-protection
+\mu,1/80,Birth and death rate

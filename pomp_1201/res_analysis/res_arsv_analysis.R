@@ -5,6 +5,7 @@ Sys.setenv('R_MAX_NUM_DLL'=1000)
 Sys.getenv('R_MAX_NUM_DLL')
 system("ulimit -n 1000")
 # first load prerequisites
+setwd("/Users/jianichen/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/res_analysis")
 source("./fit_functions.R", chdir = TRUE) 
 #########################################################################################
   res_arsv_coinfect<-list.files(path="pomp_longphi_result/res_arsv_coinfect/",pattern=".rds")
@@ -179,8 +180,7 @@ ggarrange(
   
   
   
-  
-## HHS 10: only Psi <1
+
   
   
   

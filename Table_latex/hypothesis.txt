@@ -1,0 +1,5 @@
+Hypothesis name	Parameter value
+No-interaction	"psi=0, chi=0"
+Inhibition of co-infection	"psi in (0,1], chi=0"
+Cross-immunity	"psi=0, chi in (0,1]"
+Inhibition of co-infection and cross-immunity	"psi in (0,1], chi in (0,1]"

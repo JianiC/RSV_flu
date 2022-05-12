@@ -8,9 +8,9 @@ get_rp_vals<-function(data=inc_data_add,res_hhs){
   
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
-    virus_combo=c("RSV","fluA")
+    virus_combo=c("RSV","FluA")
   }else{
-    virus_combo=c("RSV","fluB")
+    virus_combo=c("RSV","FluB")
   }
   ## pompdata
   pomp_data_hhs <- (
@@ -71,9 +71,9 @@ test_traj<-function(data=inc_data_add,res_hhs){
   
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
-    virus_combo=c("RSV","fluA")
+    virus_combo=c("RSV","FluA")
   }else{
-    virus_combo=c("RSV","fluB")
+    virus_combo=c("RSV","FluB")
   }
   
   params=get_rp_vals(data=inc_data_add,res_hhs)
@@ -101,9 +101,9 @@ test_traj_pseudo<-function(data=inc_data_add,res_hhs, n=6.5){
   
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
-    virus_combo=c("RSV","fluA")
+    virus_combo=c("RSV","FluA")
   }else{
-    virus_combo=c("RSV","fluB")
+    virus_combo=c("RSV","FluB")
   }
   
   params=get_rp_vals(data = inc_data_add,res_hhs)
@@ -137,9 +137,9 @@ test_traj_pseudo<-function(data=inc_data_add,res_hhs, n=6.5){
 traj_fit<-function(data=inc_data_perdic,res_hhs){
   HHS_region=res_hhs$HHS
   if(res_hhs$total2=="fluA"){
-    virus_combo=c("RSV","fluA")
+    virus_combo=c("RSV","FluA")
   }else{
-    virus_combo=c("RSV","fluB")
+    virus_combo=c("RSV","FluB")
   }
   
   params=get_rp_vals(data=inc_data_perdic,res_hhs)
@@ -161,9 +161,11 @@ traj_fit<-function(data=inc_data_perdic,res_hhs){
       #select(., -`.id`) %.>% 
       select(time, K1, K2) %>%
       mutate(RSV = res_hhs$DEobj$optim$bestmem["rho1"]*K1, 
-             fluA = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
-      select(time, RSV, fluA) %>%
+             FluA = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
+      select(time, RSV, FluA) %>%
       gather(key = "type", value = "cases", -time)%>%
+      mutate(cases_lb = qpois(0.025, cases), 
+             cases_ub = qpois(0.975, cases))%>%
       mutate(hypothesis=res_hhs$Hypothesi)%>%
       mutate(HHSregion=res_hhs$HHS,
              pathogen2=res_hhs$total2)->traj_fit 
@@ -174,9 +176,11 @@ traj_fit<-function(data=inc_data_perdic,res_hhs){
       #select(., -`.id`) %.>% 
       select(time, K1, K2) %>%
       mutate(RSV = res_hhs$DEobj$optim$bestmem["rho1"]*K1, 
-             fluB = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
-      select(time, RSV, fluB) %>%
+             FluB = res_hhs$DEobj$optim$bestmem["rho2"]*K2)%>%
+      select(time, RSV, FluB) %>%
       gather(key = "type", value = "cases", -time)%>%
+      mutate(cases_lb = qpois(0.025, cases), 
+             cases_ub = qpois(0.975, cases))%>%
       mutate(hypothesis=res_hhs$Hypothesi)%>%
       mutate(HHSregion=res_hhs$HHS,
              pathogen2=res_hhs$total2)->traj_fit 
@@ -305,15 +309,6 @@ modelfit_meas<-function(data = inc_data_add,res_hhs){
 
   
 }
-
-test<-modelfit_meas(res_hhs=res_hhs2_arsv_coinfect)
-
-HHS_region=res_hhs2_arsv_coinfect$HHS
-
-traj_fit(data = inc_data_add,res_hhs = res_hhs2_arsv_coinfect)%>%
-  inner_join(inc_data_add, by = c("time" = "time", "type"="virus","HHSregion"="HHS_REGION"))
-
-
 
 
 
