@@ -95,4 +95,16 @@ plot(loglik_CI_repre)
 dev.off()
 
 
+###############################################################
+## supplemmentary Fig2
+source("plot_tree_pact.R", chdir = TRUE) 
+
+pdf(file = "S2Fig_pactmeam.pdf",
+    width = 9/2.54,
+    height = 13/2.54)
+plot(pact_mean)
+
+dev.off()
+
+
 

@@ -287,29 +287,28 @@ p_skyrdie_pact<-cowplot::plot_grid(p_skyride,tree_pact,
 
 #########################################
 ## PACT statistic
-BA_sti<-read.csv("Genetic_data/flu_RSV_15-19_north_hemisphere/rsv_10_19_global/rsv_beast/rsv_beast2/gisaid_BA_north_100901_190401_G/PACT/out.stats",sep="\t")
-ON_sti<-read.csv("Genetic_data/flu_RSV_15-19_north_hemisphere/rsv_10_19_global/rsv_beast/rsv_beast2/gisaid_ON1_north_100901_190430_north_G/PACT/out.stats",sep="\t")
-H3_sti<-read.csv("Genetic_data/flu_RSV_15-19_north_hemisphere/rsv_10_19_global/flu_beast2/gisaid_H3_100901_190430/PACT/out.stats",sep="\t")
-H1_sti<-read.csv("Genetic_data/flu_RSV_15-19_north_hemisphere/rsv_10_19_global/flu_beast2/gisaid_H1_100901_190430/PACT/out.stats",sep="\t")
-Vic_sti<-read.csv("Genetic_data/flu_RSV_15-19_north_hemisphere/rsv_10_19_global/flu_beast2/gisaid_Vic_100901_190430/PACT/out.stats",sep="\t")
-Yam_sti<-read.csv("Genetic_data/flu_RSV_15-19_north_hemisphere/rsv_10_19_global/flu_beast2/gisaid_Yam_100901_190430/PACT/out.stats",sep="\t")
+BA_sta_mean<-read.csv("Genetic_analysis/RSV_flu_Beast/RSV/gisaid_BA_out.stats",sep="\t")
+ON_sta_mean<-read.csv("Genetic_analysis/RSV_flu_Beast/RSV/gisaid_ON1_out.stats",sep="\t")
+H1_sta_mean<-read.csv("Genetic_analysis/RSV_flu_Beast/Flu/gisaid_H1_out.stats",sep="\t")
+H3_sta_mean<-read.csv("Genetic_analysis/RSV_flu_Beast/Flu/gisaid_H3_out.stats",sep="\t")
+Vic_sta_mean<-read.csv("Genetic_analysis/RSV_flu_Beast/Flu/gisaid_Vic_out.stats",sep="\t")
+Yam_sta_mean<-read.csv("Genetic_analysis/RSV_flu_Beast/Flu/gisaid_Yam_out.stats",sep="\t")
 
-
-BA_sti%>%
-  mutate(pathogen="BA")-> BA_sti
-ON_sti%>%
-  mutate(pathogen="ON")->ON_sti
-H3_sti%>%
-  mutate(pathogen="H3")->H3_sti
-H1_sti%>%
-  mutate(pathogen="H1")->H1_sti
-Vic_sti%>%
-  mutate(pathogen="Victoria")->Vic_sti
-Yam_sti%>%
-  mutate(pathogen="Yamagata")->Yam_sti
+BA_sta_mean%>%
+  mutate(pathogen="BA")-> BA_sta_mean
+ON_sta_mean%>%
+  mutate(pathogen="ON")->ON_sta_mean
+H3_sta_mean%>%
+  mutate(pathogen="H3")->H3_sta_mean
+H1_sta_mean%>%
+  mutate(pathogen="H1")->H1_sta_mean
+Vic_sta_mean%>%
+  mutate(pathogen="Victoria")->Vic_sta_mean
+Yam_sta_mean%>%
+  mutate(pathogen="Yamagata")->Yam_sta_mean
 sta_names<-c("tmrca"="TMRCA","div"="Diversity","coal"="Coalescent rate","tajimad"="Tajima's D")
-BA_sti%>%
-  rbind(ON_sti,H3_sti,H1_sti,Vic_sti,Yam_sti)%>%
+BA_sta_mean%>%
+  rbind(ON_sta_mean,H3_sta_mean,H1_sta_mean,Vic_sta_mean,Yam_sta_mean)%>%
   #filter(statistic=="coal"| statistic=="div")%>%
   filter(statistic!="tmrca")%>%
   mutate(pathogen=factor(pathogen,level=c("ON", "BA","H1","H3","Victoria","Yamagata")))%>%
@@ -317,6 +316,9 @@ BA_sti%>%
   geom_point(shape=3)+
   geom_errorbar(aes(ymin=lower,ymax=upper))+
   facet_wrap(~statistic,scales = "free_y",ncol=1,labeller = as_labeller(sta_names))+
-  theme_bw()->pact_mean
+  gg.theme+
+  ylab("Mean Statistics (year)")+
+  xlab("Pathogen")+
+  theme(text = element_text(size = 8))->pact_mean
 
 ggarrange(tree_pact,pact_mean,ncol=2,widths=c(2.5,1))

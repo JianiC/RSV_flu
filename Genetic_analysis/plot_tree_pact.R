@@ -2,6 +2,7 @@ library(ggplot2)
 library(ggpubr)
 library(ggtree)
 library(treeio)
+setwd("/Users/jianichen/Dropbox/RSV_flu/RSV_flu_git")
 ##
 #tree file
 BA<-read.beast("Genetic_analysis/RSV_flu_Beast/RSV/gisaid_BA_north_100901_190430_anot.tree")
