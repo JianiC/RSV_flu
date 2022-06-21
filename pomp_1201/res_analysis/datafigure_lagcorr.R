@@ -74,6 +74,16 @@ for( i in 1:10){
   fluA_fluB_cor<-rbind(fluA_fluB_cor,out)
 }
 
+###################################################################
+
+## time lagged coorelation
+
+
+
+
+
+
+
 ####################################################################################33
 
 library(ggplot2)
@@ -226,23 +236,6 @@ regiondata%>%
         strip.text.y = element_blank())+
   scale_fill_gradient("Correation coefficient",limits=c(0,1))->cor_map
   
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -312,3 +305,57 @@ ggarrange(surveliance_propotion,ncol=2,labels="A",
 )
           
 )
+
+
+###############################################################################
+## time lag corr
+#################################################
+
+HHS_lagcorre<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
+  HHSdata<-data%>%filter(as.numeric(HHS_REGION)==HHSreg)
+  if(virus=="RSV_fluA"){
+    lag_ccf<-ccf2(HHSdata$RSVpos,HHSdata$fluApos_norm,10)
+  }else if(virus=="RSV_fluB"){
+    lag_ccf<-ccf2(HHSdata$RSVpos,HHSdata$fluBpos_norm,10)
+  }else{
+    lag_ccf<-ccf2(HHSdata$fluApos,HHSdata$fluBpos_norm,10)
+  }
+  
+  ccf_df<-as.data.frame(lag_ccf)
+  ccf_df$HHSregion=HHSreg
+  ccf_df$virus=virus
+  
+  return(ccf_df)
+  
+}
+RSV_fluA_lag_cor<-data.frame()
+for( i in 1:10){
+  out<-HHS_lagcorre(virus="RSV_fluA",HHSreg=i)
+  RSV_fluA_lag_cor<-rbind(RSV_fluA_lag_cor,out)
+}
+
+RSV_fluB_lag_cor<-data.frame()
+for( i in 1:10){
+  out<-HHS_lagcorre(virus="RSV_fluB",HHSreg=i)
+  RSV_fluB_lag_cor<-rbind(RSV_fluB_lag_cor,out)
+}
+
+fluA_fluB_lag_cor<-data.frame()
+for( i in 1:10){
+  out<-HHS_lagcorre(virus="fluA_fluB",HHSreg=i)
+  fluA_fluB_lag_cor<-rbind(fluA_fluB_lag_cor,out)
+}
+
+## plot 
+
+rbind(RSV_fluA_lag_cor,RSV_fluB_lag_cor,fluA_fluB_lag_cor)-> surveliance_lag_cor
+
+surveliance_lag_cor%>% 
+  group_by(virus, HHSregion)%>%
+  slice(which.max(CCF))-> timelag
+## heatmap
+ggplot(surveliance_lag_cor, aes(x=LAG, y=as.factor(HHSregion), fill=CCF))+
+  geom_tile()+
+  facet_wrap(~virus, ncol=3)
+
+## annotation use text "*"?
