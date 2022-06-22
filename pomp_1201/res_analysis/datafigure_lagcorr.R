@@ -311,7 +311,7 @@ ggarrange(surveliance_propotion,ncol=2,labels="A",
 ## time lag corr
 #################################################
 
-HHS_lagcorre<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
+HHS_lagcorre2<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
   HHSdata<-data%>%filter(as.numeric(HHS_REGION)==HHSreg)
   if(virus=="RSV_fluA"){
     lag_ccf<-ccf2(HHSdata$RSVpos,HHSdata$fluApos_norm,10)
@@ -328,6 +328,39 @@ HHS_lagcorre<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
   return(ccf_df)
   
 }
+
+
+HHS_lagcorre<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
+  HHSdata<-data%>%filter(as.numeric(HHS_REGION)==HHSreg)
+  if(virus=="RSV_fluA"){
+    lag_ccf<-ccf(HHSdata$RSVpos,HHSdata$fluApos_norm,10)
+  }else if(virus=="RSV_fluB"){
+    lag_ccf<-ccf(HHSdata$RSVpos,HHSdata$fluBpos_norm,10)
+  }else{
+    lag_ccf<-ccf(HHSdata$fluApos,HHSdata$fluBpos_norm,10)
+  }
+  
+  result=data_frame(HHS_region=HHSreg,
+                    lag=lag_ccf$lag,
+                    ccf=lag_ccf$acf,
+                    virus=virus
+  )
+  return(result)
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 RSV_fluA_lag_cor<-data.frame()
 for( i in 1:10){
   out<-HHS_lagcorre(virus="RSV_fluA",HHSreg=i)
@@ -350,12 +383,32 @@ for( i in 1:10){
 
 rbind(RSV_fluA_lag_cor,RSV_fluB_lag_cor,fluA_fluB_lag_cor)-> surveliance_lag_cor
 
+## group_by to find the maximal corr
 surveliance_lag_cor%>% 
   group_by(virus, HHSregion)%>%
-  slice(which.max(CCF))-> timelag
+  slice(which.max(CCF))-> timelag2
+
+surveliance_lag_cor%>% 
+  group_by(virus, HHS_region)%>%
+  slice(which.max(ccf))%>%
+  mutate(max_ccf = "*")-> timelag
+
+#install.packages("hrbrthemes")
+library(viridis)
 ## heatmap
-ggplot(surveliance_lag_cor, aes(x=LAG, y=as.factor(HHSregion), fill=CCF))+
+ggplot(surveliance_lag_cor, aes(x=lag, y=as.factor(HHS_region), fill=ccf))+
   geom_tile()+
-  facet_wrap(~virus, ncol=3)
+  geom_text(data=timelag,aes(x=lag, y=as.factor(HHS_region), label=max_ccf),color="red",size=8)+
+  facet_wrap(~virus, ncol=3,labeller = labeller(virus=cor_labs))+
+  theme(text = element_text(size = 8))+
+  theme(aspect.ratio = 0.5, 
+        legend.position = "bottom") +
+  guides(linetype = guide_legend(ncol = 1, order = 1), 
+         colour = guide_legend(ncol = 3)) +
+  theme(legend.spacing.y = unit(0.1, "lines"),
+        legend.key = element_blank(), 
+        legend.background = element_blank(),
+        strip.text.y = element_blank())+
+  scale_fill_viridis("Correation coefficient",limits=c(0,1),discrete=FALSE)
 
 ## annotation use text "*"?
