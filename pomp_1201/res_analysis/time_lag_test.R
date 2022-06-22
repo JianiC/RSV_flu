@@ -42,3 +42,5 @@ test<-ccf(RSV_flu_surveliance_norm1['RSVpos_norm'], RSV_flu_surveliance_norm1['f
 #remotes::install_github("nickpoison/astsa/astsa_build")
 library(astsa)
 lag2.plot(as.numeric(RSV_flu_surveliance_norm1['RSVpos_norm']), as.numeric(RSV_flu_surveliance_norm1['fluApos_norm']),5)
+test$acf
+test$lag
