@@ -56,16 +56,35 @@ shapiro.test(Yam_skyride_approx$y)
 
 ## pairwise skyrdie correlation test
 
-skyride_corr<-function(skyride_approx1,skyride_approx2,label1,label2){
-  cor<-cor.test(skyride_approx1$y,skyride_approx2$y,method="pearon")
-  out<-data.frame(virus1=label1,
-                  virus2=label2,
-                  method="pearson",
+skyride_corr<-function(skyride_approx1,skyride_approx2){
+  res<-cor.test(skyride_approx1,skyride_approx2,method="pearson")
+  out<-data.frame(method="pearson",
                   corre=res$estimate,
                   CI_low=res$conf.int[1],
                   CI_high=res$conf.int[2])
   return(out)
-  
-  
 }
-skyride_cor1<-
+
+## store the skyride approx to a list 
+idx_skyride<-list(ON=ON_skyride_approx$y,BA=BA_skyride_approx$y,H3=H3_skyride_approx$y,H1=H1_skyride_approx$y,
+                  Vic=Vic_skyride_approx$y,Yam=Yam_skyride_approx$y)
+
+## loop through all index
+pathogen_idx=combn(seq(1,length(idx_skyride)), 2, FUN = NULL, simplify = TRUE)
+
+## loop through all list to caluculate the coorelation
+df_skyride_cor<-data.frame()
+for(i in seq(1, ncol(pathogen_idx))) {
+
+  id1=pathogen_idx[1,i]
+  id2=pathogen_idx[2,i]
+  corr_out <- skyride_corr(idx_skyride[[id1]],idx_skyride[[id2]])
+  corr_out$virus1 =names(idx_skyride[id1])
+  corr_out$virus2 =names(idx_skyride[id2])
+
+  ## concatenate loop result together
+  df_skyride_cor<-rbind(df_skyride_cor,corr_out)
+}
+
+df_skyride_cor
+write.csv(df_skyride_cor,"Genetic_analysis/skyride_cor.csv", row.names = FALSE)
