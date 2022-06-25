@@ -1,4 +1,5 @@
 ## surveliance data correlation
+setwd("/Users/jianichen/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/res_analysis")
 source("./fit_functions.R", chdir = TRUE) 
 library(ggpubr)
 library("lubridate")
@@ -51,6 +52,7 @@ HHS_corre<-function(data=RSV_flu_surveliance_norm,virus,HHSreg){
                     corre=res$estimate,
                     CI_low=res$conf.int[1],
                     CI_high=res$conf.int[2],
+                    p_value=res$p.value,
                     virus=virus
                     )
   return(result)
@@ -227,14 +229,16 @@ regiondata%>%
   facet_wrap(~virus,labeller = labeller(virus=cor_labs))+
   theme(text = element_text(size = 8))+
   theme(aspect.ratio = 0.5, 
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        plot.margin = margin(0.1, 0.1, 0.3, 0.1)) +
   guides(linetype = guide_legend(ncol = 1, order = 1), 
          colour = guide_legend(ncol = 3)) +
   theme(legend.spacing.y = unit(0.1, "lines"),
         legend.key = element_blank(), 
         legend.background = element_blank(),
         strip.text.y = element_blank())+
-  scale_fill_gradient("Correation coefficient",limits=c(0,1))->cor_map
+#  scale_fill_gradient("Correation coefficient",limits=c(0,1))+
+  scale_fill_viridis("Correation coefficient",limits=c(-0.1,1),discrete=FALSE)->cor_map
   
 
 
@@ -274,10 +278,12 @@ order<-c("U.S.","1","2","3","4","5","6","7","8","9","10")
            colour = guide_legend(ncol = 3)) +
     theme(legend.spacing.y = unit(0.1, "lines"),
           legend.key = element_blank(), 
-          legend.background = element_blank())+
+          legend.background = element_blank(),
+          plot.margin = margin(0.1, 0.1, 0.1, 0.1))+
   scale_y_continuous(labels = scales::percent_format(accuracy = 1),
                      breaks = seq(0,1,0.4)
                      )+
+    guides(color = guide_legend(override.aes = list(size = 0.3)))+
   scale_fill_manual(name = "",values=c("#66A61E","#E6AB02","#E7298A"), labels = c("RSV","FluA", "FluB" ))+
   scale_x_continuous(breaks = seq(2011,2019,1),position = 'bottom',limits =c(2011,2019))+
   xlab("Date")+
@@ -292,19 +298,6 @@ plot_grid( surveliance_propotion, cor_map,
           rel_heights = c(2.5,1))->data_figure 
   
   
-
-ggarrange(surveliance_propotion,ncol=2,labels="A",
-          ggarrange(p_fluAfluB_cor,p_RSVfluA_cor,p_RSVfluB_cor,
-                    #labels=c("correlation coefficient of FluA and FluB weekly case",
-                    #        "correlation coefficient of RSV and FluA weekly case",
-                    #       "correlation coefficient of RSV and FluB weekly case"),
-                    labels=c("B","C","D"),
-                    ncol=1,
-                    common.legend = TRUE
-                    
-)
-          
-)
 
 
 ###############################################################################
@@ -398,17 +391,38 @@ library(viridis)
 ## heatmap
 ggplot(surveliance_lag_cor, aes(x=lag, y=as.factor(HHS_region), fill=ccf))+
   geom_tile()+
-  geom_text(data=timelag,aes(x=lag, y=as.factor(HHS_region), label=max_ccf),color="red",size=8)+
+  geom_text(data=timelag,aes(x=lag, y=as.factor(HHS_region), label=max_ccf),color="red",size=4,vjust = "inward")+
   facet_wrap(~virus, ncol=3,labeller = labeller(virus=cor_labs))+
-  theme(text = element_text(size = 8))+
-  theme(aspect.ratio = 0.5, 
+  theme(text = element_text(size =8))+
+  theme(
         legend.position = "bottom") +
   guides(linetype = guide_legend(ncol = 1, order = 1), 
          colour = guide_legend(ncol = 3)) +
   theme(legend.spacing.y = unit(0.1, "lines"),
         legend.key = element_blank(), 
         legend.background = element_blank(),
-        strip.text.y = element_blank())+
-  scale_fill_viridis("Correation coefficient",limits=c(0,1),discrete=FALSE)
+        strip.text.y = element_blank(),
+        plot.margin = margin(0.1, 0.1, 0.1, 0.1))+
+  xlab("Time lag (week)")+
+  ylab("HHS regions")+
+  scale_fill_viridis("Correation coefficient",limits=c(-0.1,1),discrete=FALSE)->timelag_corr
 
 ## annotation use text "*"?
+
+legend_cor <- get_legend(
+  timelag_corr + 
+    #guides(color = guide_legend(nrow = 3)) +
+    theme(legend.position = "bottom",
+          text = element_text(size = 8))
+)
+
+
+
+
+plot_grid(surveliance_propotion, 
+          cor_map+theme(legend.position="none",text = element_text(size = 8)), 
+          timelag_corr+ theme(legend.position="none",text = element_text(size = 8)), 
+          nrow = 3,rel_heights = c(2,0.7,0.7),
+          labels = "AUTO", label_size = 12)->data_fig_cor
+
+plot_grid( data_fig_cor, legend_cor, ncol = 1, rel_heights = c(1, .05))->data_cor_figure

@@ -30,13 +30,16 @@ skyride_approx<-function(skyride,timepoint){
 skyride_timpoint<-seq(2010, 2019, by = 0.1)
 ON_skyride_approx<-skyride_approx(ON_skyride,skyride_timpoint)
 BA_skyride_approx<-skyride_approx(BA_skyride,skyride_timpoint)
+## adding together?
+RSV_skyride_approx<-ON_skyride_approx$y+BA_skyride_approx$y
 
 H3_skyride_approx<-skyride_approx(H3_skyride,skyride_timpoint)
 H1_skyride_approx<-skyride_approx(H1_skyride,skyride_timpoint)
+FluA_skyride_approx<- H3_skyride_approx$y+ H1_skyride_approx$y
 
 Vic_skyride_approx<-skyride_approx(Vic_skyride,skyride_timpoint)
 Yam_skyride_approx<-skyride_approx(Yam_skyride,skyride_timpoint)
-
+FluB_skyride_approx<- Vic_skyride_approx$y+ Yam_skyride_approx$y
 ## test
 plot(H1_skyride_approx$x,H1_skyride_approx$y)
 #################################################################
@@ -61,13 +64,15 @@ skyride_corr<-function(skyride_approx1,skyride_approx2){
   out<-data.frame(method="pearson",
                   corre=res$estimate,
                   CI_low=res$conf.int[1],
-                  CI_high=res$conf.int[2])
+                  CI_high=res$conf.int[2],
+                  p_value=res$p.value)
   return(out)
 }
 
 ## store the skyride approx to a list 
 idx_skyride<-list(ON=ON_skyride_approx$y,BA=BA_skyride_approx$y,H3=H3_skyride_approx$y,H1=H1_skyride_approx$y,
-                  Vic=Vic_skyride_approx$y,Yam=Yam_skyride_approx$y)
+                  Vic=Vic_skyride_approx$y,Yam=Yam_skyride_approx$y, RSV=RSV_skyride_approx,FluA=FluA_skyride_approx,
+                  FluB=FluB_skyride_approx)
 
 ## loop through all index
 pathogen_idx=combn(seq(1,length(idx_skyride)), 2, FUN = NULL, simplify = TRUE)
@@ -88,3 +93,5 @@ for(i in seq(1, ncol(pathogen_idx))) {
 
 df_skyride_cor
 write.csv(df_skyride_cor,"Genetic_analysis/skyride_cor.csv", row.names = FALSE)
+
+###### further test the correlation of skyride genetic data and surveliance
