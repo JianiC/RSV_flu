@@ -1,5 +1,5 @@
 ## surveliance data correlation
-setwd("/Users/jianichen/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/res_analysis")
+setwd("/Users/jianichen1/Dropbox/RSV_flu/RSV_flu_git/pomp_1201/res_analysis")
 source("./fit_functions.R", chdir = TRUE) 
 library(ggpubr)
 library("lubridate")
@@ -391,7 +391,7 @@ library(viridis)
 ## heatmap
 ggplot(surveliance_lag_cor, aes(x=lag, y=as.factor(HHS_region), fill=ccf))+
   geom_tile()+
-  geom_text(data=timelag,aes(x=lag, y=as.factor(HHS_region), label=max_ccf),color="red",size=4,vjust = "inward")+
+  geom_text(data=timelag,aes(x=lag, y=as.factor(HHS_region), label=max_ccf),color="red",size=4,vjust = 0.8)+
   facet_wrap(~virus, ncol=3,labeller = labeller(virus=cor_labs))+
   theme(text = element_text(size =8))+
   theme(

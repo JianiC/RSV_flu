@@ -37,10 +37,11 @@ gg.theme <- (
 source("datafigure.R", chdir = TRUE) 
 
 
-pdf(file = "Figure1_datafigure.pdf",
+pdf(file = "Figure1_datafigure_cor.pdf",
     width = 8.7/2.54,
-    height = 14/2.54)
-plot(data_figure)
+    height = 15/2.54)
+#plot(data_figure)
+plot(data_cor_figure)
 
 dev.off()
 
