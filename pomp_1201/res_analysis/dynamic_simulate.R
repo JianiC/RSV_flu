@@ -97,25 +97,27 @@ sim_res<-params_design %>% bind_cols(res_design)
 ggplot(sim_res, aes(x=chi,y=psi,fill=mp12_ratio))+
   geom_tile()+
   gg.theme+
-  labs(y=expression(paste("Strength of cross immunity(",psi,")")),
-       x=expression(paste("Propotion of inhibition\n on co-infection(",chi,")")),
+  labs(y=expression(paste("Propotion of inhibition on co-infection(",psi,")")),
+       x=expression(paste("Strength of cross-immunity((",chi,")")),
        fill="peak case ration\n(pathogen1/pathogen2)")+
   guides(colorbar = guide_legend(title.position = "top"))+
   theme(legend.position = "top",
         text = element_text(size = 8),
-        legend.text = element_text(size=6))->mp_sim
+        legend.text = element_text(size=6))+
+  scale_fill_viridis("Peak case ration\n(pathogen1/pathogen2)",discrete=FALSE)->mp_sim
 
 
 ggplot(sim_res, aes(x=chi,y=psi,fill=pw12_diff))+
   geom_tile()+
   gg.theme+
-  labs(y=expression(paste("Strength of cross immunity (",psi,")")),
-       x=expression(paste("Propotion of inhibition\non co-infection(",chi,")")),
+  labs(y=expression(paste("Propotion of inhibition on co-infection (",psi,")")),
+       x=expression(paste("Strength of cross-immunity(",chi,")")),
        fill="Peak week difference\n(pathogen1-pathogen2)")+
   theme(legend.position = "bottom",
         text = element_text(size = 8),
         legend.text = element_text(size=6))+
-  guides(colorbar = guide_legend(title.position = "top"))->pw_sim
+  guides(colorbar = guide_legend(title.position = "top"))+
+  scale_fill_viridis("Peak week difference\n(pathogen1-pathogen2)",discrete=FALSE)->pw_sim
 
 
 ggarrange(mp_sim +

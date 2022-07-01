@@ -6,7 +6,7 @@ library(ggtree)
 library(treeio)
 library(scales)
 ##
-
+setwd("/Users/jianichen1/Dropbox/RSV_flu/RSV_flu_git")
 ## load skyride data
 ## RSV skyride
 ON_skyride<-read.table('Genetic_analysis/RSV_flu_Beast/RSV/gisaid_ON1_north_100901_190430_skyride.txt', skip = 1, header =TRUE, sep ='\t')
@@ -31,15 +31,15 @@ skyride_timpoint<-seq(2010, 2019, by = 0.1)
 ON_skyride_approx<-skyride_approx(ON_skyride,skyride_timpoint)
 BA_skyride_approx<-skyride_approx(BA_skyride,skyride_timpoint)
 ## adding together?
-RSV_skyride_approx<-ON_skyride_approx$y+BA_skyride_approx$y
+#RSV_skyride_approx<-ON_skyride_approx$y+BA_skyride_approx$y ## adding together might not make sense
 
 H3_skyride_approx<-skyride_approx(H3_skyride,skyride_timpoint)
 H1_skyride_approx<-skyride_approx(H1_skyride,skyride_timpoint)
-FluA_skyride_approx<- H3_skyride_approx$y+ H1_skyride_approx$y
+#FluA_skyride_approx<- H3_skyride_approx$y+ H1_skyride_approx$y
 
 Vic_skyride_approx<-skyride_approx(Vic_skyride,skyride_timpoint)
 Yam_skyride_approx<-skyride_approx(Yam_skyride,skyride_timpoint)
-FluB_skyride_approx<- Vic_skyride_approx$y+ Yam_skyride_approx$y
+#FluB_skyride_approx<- Vic_skyride_approx$y+ Yam_skyride_approx$y
 ## test
 plot(H1_skyride_approx$x,H1_skyride_approx$y)
 #################################################################
@@ -71,8 +71,11 @@ skyride_corr<-function(skyride_approx1,skyride_approx2){
 
 ## store the skyride approx to a list 
 idx_skyride<-list(ON=ON_skyride_approx$y,BA=BA_skyride_approx$y,H3=H3_skyride_approx$y,H1=H1_skyride_approx$y,
-                  Vic=Vic_skyride_approx$y,Yam=Yam_skyride_approx$y, RSV=RSV_skyride_approx,FluA=FluA_skyride_approx,
-                  FluB=FluB_skyride_approx)
+                  Vic=Vic_skyride_approx$y,Yam=Yam_skyride_approx$y)
+
+
+test<-cor.test(Vic_skyride_approx$y,BA_skyride_approx$y,method="kendall")
+test$parameter
 
 ## loop through all index
 pathogen_idx=combn(seq(1,length(idx_skyride)), 2, FUN = NULL, simplify = TRUE)
